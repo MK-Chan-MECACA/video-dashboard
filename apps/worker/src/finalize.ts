@@ -101,6 +101,14 @@ async function maybeAdvanceAfterGeneration(videoId: string): Promise<void> {
     assets.filter((a) => a.kind === 'scene_clip' && a.scene_index != null).map((a) => a.scene_index),
   );
 
+  // Regeneration guard: asset rows from the PREVIOUS generation satisfy the
+  // presence check below while fresh clips are still generating/uploading —
+  // the render would download stale files (seen live: a regen render shipped
+  // with two old 5s clips). Wait until no avatar/scene job is still pending.
+  if ((await hasPendingJob(videoId, 'scene')) || (await hasPendingJob(videoId, 'avatar'))) {
+    return;
+  }
+
   if (hasAvatar && sceneIndexes.size >= 3) {
     const moved = await setVideoStatus(videoId, 'rendering', { reason: 'all clips ready' });
     if (moved && !(await hasPendingJob(videoId, 'render'))) {

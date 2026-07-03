@@ -30,6 +30,7 @@ import { probeDimensions, probeDurationS, probeVideoCodec, run, runFfmpeg } from
 import {
   buildRenderPlan,
   buildThumbnailArgs,
+  fitClipToWindow,
   type RenderSceneInput,
 } from '../render/render';
 import { buildHfComposition, hfProjectFiles } from '../render/hyperframes';
@@ -245,12 +246,36 @@ export async function handleRender(job: Job): Promise<void> {
         ? await probeDimensions(logoPath).then((d) => d.width / d.height)
         : undefined;
 
+      // HyperFrames does NOT hold the last frame when a clip's source runs out
+      // before its window ends — the element goes blank and the avatar base
+      // shows through. Pre-fit short clips the same way the ffmpeg engine
+      // does: slow down up to 1.25x, then clone the last frame to the window.
+      const fitSceneClip = async (s: RenderSceneInput, i: number): Promise<string> => {
+        const windowDur = s.windowEnd - s.windowStart;
+        const { setptsFactor, tpadSeconds } = fitClipToWindow(s.durationS, windowDur);
+        if (setptsFactor === 1 && tpadSeconds <= 0.01) return s.path;
+        const vf: string[] = [];
+        if (setptsFactor !== 1) vf.push(`setpts=${setptsFactor.toFixed(4)}*PTS`);
+        if (tpadSeconds > 0.01) {
+          vf.push(`tpad=stop_mode=clone:stop_duration=${tpadSeconds.toFixed(3)}`);
+        }
+        const fitted = path.join(tmpDir, `scene_fit_${i + 1}.mp4`);
+        await runFfmpeg([
+          '-y', '-i', s.path,
+          '-vf', vf.join(','),
+          '-an',
+          '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-preset', 'veryfast', '-crf', '20',
+          fitted,
+        ]);
+        return fitted;
+      };
+
       const comp = buildHfComposition({
         avatarFile: await stage(avatarPath),
         avatarDurationS,
         scenes: await Promise.all(
-          scenes.map(async (s) => ({
-            file: await stage(s.path),
+          scenes.map(async (s, i) => ({
+            file: await stage(await fitSceneClip(s, i)),
             windowStart: s.windowStart,
             windowEnd: s.windowEnd,
           })),

@@ -107,8 +107,10 @@ export function buildHfComposition(input: HfCompositionInput): HfComposition {
     `<video id="avatar-full" class="fullscreen" src="${input.avatarFile}" data-start="0" data-duration="${fmt(mainDur)}" data-track-index="0" data-volume="0" muted playsinline></video>`,
   );
 
-  // Track 1: B-roll scenes, each gated to its voiceover window. HyperFrames
-  // freeze-frames when a source runs out, covering short clips.
+  // Track 1: B-roll scenes tiling the whole main video. Each staged file must
+  // be at least as long as its window (the render handler pre-fits short
+  // clips) — HyperFrames does NOT hold the last frame when a source runs out;
+  // the element goes blank and exposes the avatar base.
   input.scenes.forEach((s, i) => {
     const dur = Math.max(0, Math.min(s.windowEnd, mainDur) - s.windowStart);
     if (dur <= 0) return;
