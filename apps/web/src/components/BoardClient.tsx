@@ -13,6 +13,8 @@ export interface BoardVideo {
   title: string;
   status: VideoStatus;
   status_error: string | null;
+  /** Pre-formatted estimated spend (e.g. "$4.87"); null until generation starts. */
+  cost: string | null;
 }
 
 type SortMode = 'recent' | 'no_asc' | 'no_desc';
@@ -152,7 +154,14 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
                       )}
                       {v.title}
                     </p>
-                    <StatusBadge status={v.status} />
+                    <span className="flex items-center gap-1.5">
+                      <StatusBadge status={v.status} />
+                      {v.cost && (
+                        <span className="rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-[10px] text-neutral-400">
+                          {v.cost}
+                        </span>
+                      )}
+                    </span>
                     {v.status === 'failed' && v.status_error && (
                       <p className="mt-1 line-clamp-2 text-xs text-red-400">{v.status_error}</p>
                     )}

@@ -1,4 +1,5 @@
 export * from './types';
+export * from './pricing';
 export * from './renderTemplate';
 export * from './pipeline';
 export * from './heygen';

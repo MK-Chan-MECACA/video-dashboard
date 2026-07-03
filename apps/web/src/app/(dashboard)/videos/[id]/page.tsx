@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import type { Asset, ScriptVersion, Video } from '@vd/shared';
+import type { Asset, Job, ScriptVersion, Video } from '@vd/shared';
+import { estimateVideoCost, formatUsd } from '@vd/shared/pricing';
 import { supabaseServer } from '@/lib/supabase';
 import { ScriptView } from '@/components/ScriptView';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -46,6 +47,8 @@ export default async function VideoDetailPage({
     assetList
       .filter((a) => a.kind === kind && (sceneIndex === undefined || a.scene_index === sceneIndex))
       .at(-1);
+
+  const cost = estimateVideoCost(assetList, (jobs ?? []) as Job[]);
 
   const voiceover = latestByKind('voiceover');
   const avatar = latestByKind('avatar_video');
@@ -160,6 +163,29 @@ export default async function VideoDetailPage({
         </div>
 
         <div className="space-y-6">
+          {cost.lines.length > 0 && (
+            <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+              <h2 className="mb-2 flex items-center justify-between text-sm font-semibold text-neutral-300">
+                Cost
+                <span className="font-mono text-yellow-400">
+                  {formatUsd(cost.totalUsd, cost.approx)}
+                </span>
+              </h2>
+              <ul className="space-y-1 text-xs">
+                {cost.lines.map((l, idx) => (
+                  <li key={idx} className="flex justify-between gap-2 text-neutral-400">
+                    <span>{l.label}</span>
+                    <span className="font-mono">{formatUsd(l.usd, l.approx)}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-[10px] text-neutral-600">
+                Estimated from generated durations at current provider rates; every
+                submitted generation counts, including re-generations.
+              </p>
+            </section>
+          )}
+
           <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
             <h2 className="mb-2 text-sm font-semibold text-neutral-300">Jobs</h2>
             <ul className="space-y-1 text-xs">
