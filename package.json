@@ -1,0 +1,14 @@
+{
+  "name": "video-dashboard",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @vd/web dev",
+    "dev:worker": "pnpm --filter @vd/worker dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">=20"
+  }
+}
