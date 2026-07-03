@@ -15,7 +15,7 @@ One-time provisioning, in order. Budget ~1 hour.
 
 1. Cloudflare dashboard → R2 → **Create bucket** (any name, e.g. `my-media`) → `R2_BUCKET`.
 2. Bucket → Settings → Public access → enable (custom domain or `r2.dev` URL) → `R2_PUBLIC_BASE_URL`.
-   Public access is required so GoHighLevel/TikTok can fetch the final video. Keys are unguessable UUIDs.
+   Public access is required so GoHighLevel and the social platforms can fetch the final video. Keys are unguessable UUIDs.
 3. R2 → Manage API tokens → Create token (Object Read & Write, scoped to the bucket) → `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`. Account id → `R2_ACCOUNT_ID`.
 
 ## 3. API keys
@@ -24,8 +24,8 @@ One-time provisioning, in order. Budget ~1 hour.
 - **HeyGen**: app.heygen.com → Settings → API (needs the paid API plan) → `HEYGEN_API_KEY`.
 - **WaveSpeed**: wavespeed.ai → dashboard → API key → `WAVESPEED_API_KEY`. Webhooks page → create webhook secret → `WAVESPEED_WEBHOOK_SECRET`.
 - **GoHighLevel**: Sub-account → Settings → Private Integrations → create with Social Planner read/write scopes → `GHL_PRIVATE_TOKEN`. Location ID → `GHL_LOCATION_ID`.
-  - Connect your brand's TikTok account: Marketing → Social Planner → Settings → Connect TikTok.
-  - Then in the dashboard Settings page click "List connected social accounts" to get `GHL_TIKTOK_ACCOUNT_ID`. `GHL_USER_ID` = your GHL user id (Settings → My Staff → your profile URL contains it).
+  - Connect your brand's social accounts (TikTok, Instagram, Facebook, YouTube, ...): Marketing → Social Planner → Settings → Connect.
+  - Then in the dashboard Settings page click "List connected social accounts" and put the ids you want to post to (comma-separated) in `GHL_SOCIAL_ACCOUNT_IDS`. `GHL_USER_ID` = your GHL user id (Settings → My Staff → your profile URL contains it).
 
 ## 4. Deploy web app (Vercel)
 
@@ -49,7 +49,7 @@ cd apps/web && vercel link
 3. **Settings** → Load English voices → pick + save the HeyGen voice.
 4. Create a test video → generate script → create a script review link → open it in an incognito window → approve.
 5. Watch the pipeline: voiceover → avatar → scenes → render (worker logs in Railway). Assets appear on the video page as they finish.
-6. Create a video review link → approve → check Social Planner in GHL for the scheduled TikTok post. **Verify the first post actually publishes** (personal TikTok profiles may use notification-based posting).
+6. Create a video review link → approve → check Social Planner in GHL for the scheduled post on each connected platform. **Verify the first post actually publishes** (e.g. personal TikTok profiles may use notification-based posting).
 
 ## Cost expectations (~35 videos/month, 75s average)
 

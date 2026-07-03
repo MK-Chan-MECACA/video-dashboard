@@ -336,7 +336,7 @@ export function SettingsClient({
           </div>
           <p className="mt-2 text-xs text-neutral-600">
             Higher &quot;height above bottom&quot; moves subtitles toward the middle of the frame
-            (560 ≈ lower third, keeps clear of the TikTok UI).
+            (560 ≈ lower third, keeps clear of the platform UI overlays).
           </p>
         </div>
 
@@ -511,7 +511,7 @@ export function SettingsClient({
       <section className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
         <h2 className="text-sm font-semibold text-neutral-300">Claude caption writer</h2>
         <p className="text-xs text-neutral-500">
-          System prompt used to write the TikTok caption after the final video is approved.
+          System prompt used to write the post caption after the final video is approved.
           Put your brand, hashtags, and local tags here.
         </p>
         <textarea
@@ -591,10 +591,10 @@ export function SettingsClient({
       </section>
 
       <section className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="text-sm font-semibold text-neutral-300">GoHighLevel / TikTok</h2>
+        <h2 className="text-sm font-semibold text-neutral-300">GoHighLevel / social posting</h2>
         <p className="text-xs text-neutral-500">
-          The TikTok account id and user id are set via env vars (GHL_TIKTOK_ACCOUNT_ID,
-          GHL_USER_ID). Use this to look them up.
+          Posts go to the accounts in GHL_SOCIAL_ACCOUNT_IDS (comma-separated — TikTok,
+          Instagram, Facebook, ...) as user GHL_USER_ID. Use this to look the ids up.
         </p>
         <button
           onClick={loadGhl}

@@ -141,7 +141,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
       )}
 
       <div className="mt-4 space-y-2 border-t border-neutral-800 pt-4">
-        <label className="block text-xs text-neutral-400">TikTok caption</label>
+        <label className="block text-xs text-neutral-400">Post caption</label>
         <textarea
           value={caption}
           onChange={(e) => setCaption(e.target.value)}

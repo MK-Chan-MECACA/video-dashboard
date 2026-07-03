@@ -278,7 +278,7 @@ export function RenderTemplatePreview({
           {safeZones && (
             <>
               <div style={{ ...SAFE_ZONE, right: 0, top: 1020, width: 150, height: 700 }}>UI</div>
-              <div style={{ ...SAFE_ZONE, left: 0, right: 0, bottom: 0, height: 300 }}>TIKTOK UI</div>
+              <div style={{ ...SAFE_ZONE, left: 0, right: 0, bottom: 0, height: 300 }}>PLATFORM UI</div>
             </>
           )}
         </div>
@@ -304,7 +304,7 @@ export function RenderTemplatePreview({
       </div>
       <label className="flex items-center gap-2 text-xs text-neutral-400">
         <input type="checkbox" checked={safeZones} onChange={(e) => setSafeZones(e.target.checked)} />
-        Show TikTok UI zones
+        Show platform UI zones
       </label>
       <p className="text-xs text-neutral-600" style={{ width: Math.round(W * SCALE) }}>
         Live preview using the render engine&apos;s exact layout math. The bubble appears only while

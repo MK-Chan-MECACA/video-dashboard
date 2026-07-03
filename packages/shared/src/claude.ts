@@ -4,9 +4,9 @@ import { DEFAULT_SCENE_MODEL, sanitizeSpokenText, type Script } from './types';
 const MODEL = 'claude-sonnet-5';
 
 /** Built-in system prompt — used when the operator hasn't saved a custom one in Settings.
- *  Encodes the Digital Avatar TikTok Production SOP + the Narrator Bubble format (Rev 3).
+ *  Encodes the Digital Avatar Short-Form Production SOP + the Narrator Bubble format (Rev 3).
  *  Brand-neutral template: the operator fills in the ABOUT YOUR BRAND block via Settings. */
-export const DEFAULT_SCRIPT_SYSTEM = `You are a TikTok scriptwriter. You write 15-second Narrator Bubble scripts.
+export const DEFAULT_SCRIPT_SYSTEM = `You are a short-form video scriptwriter (TikTok, Instagram Reels, YouTube Shorts). You write 15-second Narrator Bubble scripts.
 
 ABOUT YOUR BRAND (edit this section in Settings before generating your first script):
 - Presenter: who speaks on camera — name, credibility, expertise, what makes them worth listening to.
@@ -20,7 +20,7 @@ FORMAT — Narrator Bubble (production SOP):
   - hook: 1-2 short spoken lines (first 3 seconds) that stop the scroll — pain the viewer recognizes, curiosity, myth-busting, or a warning. No greetings.
   - 3 scenes: each has "voiceover" (one short spoken line continuing the story) and "broll_prompt" (the main-scene visual illustrating that exact line).
   - cta: closing spoken line(s) — the presenter's sign-off woven with the invitation from ABOUT YOUR BRAND.
-- Total spoken text 30-45 words (~15 seconds). Short spoken sentences, TikTok pacing — not brochure pacing. No emojis, no stage directions, no quotes-in-quotes.
+- Total spoken text 30-45 words (~15 seconds). Short spoken sentences, short-form pacing — not brochure pacing. No emojis, no stage directions, no quotes-in-quotes.
 - NEVER use em-dashes or en-dashes anywhere in spoken text (hook, scene voiceovers, cta): the TTS voice reads straight through them without pausing, rushing the line. Use a comma or a period and short sentences instead.
 
 VOICE & HONESTY:
@@ -37,7 +37,7 @@ Problem the viewer recognizes → why it happens or keeps coming back → payoff
 
 /** Built-in caption prompt — used when the operator hasn't saved a custom one in Settings. */
 export const DEFAULT_CAPTION_SYSTEM =
-  'You write TikTok captions for the brand whose video script you are given. ' +
+  'You write short-form video captions (TikTok, Reels, Shorts) for the brand whose video script you are given. ' +
   'Format: a hook-style first line, one value line, one CTA line, then 3-5 hashtags on the last line ' +
   '(mix niche tags with local or topical tags your audience actually searches). ' +
   'Under 500 characters total. No emojis in the first line; 1-2 emojis elsewhere are fine. ' +
@@ -45,7 +45,7 @@ export const DEFAULT_CAPTION_SYSTEM =
 
 const SCRIPT_TOOL: Anthropic.Tool = {
   name: 'submit_script',
-  description: 'Submit the final TikTok script',
+  description: 'Submit the final short-form video script',
   input_schema: {
     type: 'object' as const,
     properties: {

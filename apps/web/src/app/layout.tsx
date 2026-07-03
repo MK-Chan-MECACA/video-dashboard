@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     default: 'Video Dashboard',
     template: '%s · Video Dashboard',
   },
-  description: 'AI TikTok video production pipeline',
+  description: 'AI short-form video production pipeline',
   applicationName: 'Video Dashboard',
   // Private internal tool + tokenized client-review links: keep it out of search indexes.
   robots: { index: false, follow: false, nocache: true },

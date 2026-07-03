@@ -39,22 +39,27 @@ export class GhlClient {
     return json.results?.accounts ?? [];
   }
 
-  /** Schedule a TikTok post. mediaUrl must be publicly fetchable (R2 public URL). */
+  /**
+   * Schedule a post to one or more connected social accounts (TikTok,
+   * Instagram, Facebook, YouTube, ...). mediaUrl must be publicly fetchable
+   * (R2 public URL).
+   */
   async schedulePost(opts: {
-    accountId: string;
+    accountIds: string[];
     userId: string;
     caption: string;
     mediaUrl: string;
     scheduleDate: string; // ISO
   }): Promise<string> {
     if (opts.caption.length > 2200) {
-      throw new Error(`Caption too long for TikTok: ${opts.caption.length} > 2200`);
+      // 2200 is TikTok's limit, the strictest of the supported platforms.
+      throw new Error(`Caption too long: ${opts.caption.length} > 2200`);
     }
     const res = await fetch(`${BASE}/social-media-posting/${this.locationId}/posts`, {
       method: 'POST',
       headers: this.headers(),
       body: JSON.stringify({
-        accountIds: [opts.accountId],
+        accountIds: opts.accountIds,
         userId: opts.userId,
         type: 'post',
         status: 'scheduled',

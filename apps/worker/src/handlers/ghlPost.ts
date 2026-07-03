@@ -41,9 +41,18 @@ export async function handleGhlPost(job: Job): Promise<void> {
     ? new Date(video.schedule_at).toISOString()
     : nextDay19KualaLumpur();
 
-  const accountId = requiredEnv('GHL_TIKTOK_ACCOUNT_ID');
+  // Comma-separated ids of connected GHL social accounts (any platform:
+  // TikTok, Instagram, Facebook, ...). GHL_TIKTOK_ACCOUNT_ID is the legacy
+  // single-account name and still works.
+  const accountIds = (
+    process.env.GHL_SOCIAL_ACCOUNT_IDS ?? requiredEnv('GHL_TIKTOK_ACCOUNT_ID')
+  )
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!accountIds.length) throw new Error('GHL_SOCIAL_ACCOUNT_IDS is empty');
   const ghlPostId = await ghl().schedulePost({
-    accountId,
+    accountIds,
     userId: requiredEnv('GHL_USER_ID'),
     caption,
     mediaUrl,
@@ -53,7 +62,7 @@ export async function handleGhlPost(job: Job): Promise<void> {
   await insertPost({
     video_id: video.id,
     ghl_post_id: ghlPostId,
-    ghl_account_id: accountId,
+    ghl_account_id: accountIds.join(','),
     caption,
     schedule_date: scheduleDate,
   });
