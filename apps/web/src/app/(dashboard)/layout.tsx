@@ -16,6 +16,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <nav className="ml-auto flex items-center gap-3 text-sm text-neutral-300 sm:gap-4">
             <Link href="/" className="whitespace-nowrap hover:text-white">Pipeline</Link>
             <Link href="/videos/new" className="whitespace-nowrap hover:text-white">New Video</Link>
+            <Link href="/guide" className="whitespace-nowrap hover:text-white">How to use</Link>
             <Link href="/docs" className="whitespace-nowrap hover:text-white">API &amp; MCP</Link>
             <Link href="/settings" className="whitespace-nowrap hover:text-white">Settings</Link>
           </nav>
