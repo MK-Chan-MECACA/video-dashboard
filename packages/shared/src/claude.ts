@@ -81,20 +81,47 @@ export interface PastScript {
   hook: string;
 }
 
+/** Optional creative direction for AI-invented scripts; empty fields fall back to brand defaults. */
+export interface ScriptDirection {
+  tone?: string; // "The Vibe"
+  style?: string; // "The Format & Structure"
+  constraints?: string; // "The Parameters"
+  flow?: string; // "The Flow"
+}
+
 export async function generateScript(opts: {
   apiKey: string;
-  topicBrief: string;
+  topicBrief?: string; // when absent, Claude invents a fresh topic for the channel
   previousScript?: Script;
   instructions?: string; // regeneration instructions / reviewer comments
   systemPrompt?: string; // operator-customized system prompt (Settings), falls back to DEFAULT_SCRIPT_SYSTEM
   recentScripts?: PastScript[]; // memory: scripts already produced, newest first
+  direction?: ScriptDirection;
+  avoidTitles?: string[]; // hard no-repeat list of every title already produced
 }): Promise<GeneratedScript> {
   const anthropic = new Anthropic({ apiKey: opts.apiKey });
 
-  let user = `Topic brief:\n${opts.topicBrief}`;
+  let user = opts.topicBrief
+    ? `Topic brief:\n${opts.topicBrief}`
+    : 'No topic brief was provided. Invent ONE fresh, scroll-stopping topic for this channel that fits the brand described in the system prompt. Pick an angle not covered by any past title or script listed below.';
+  const d = opts.direction;
+  if (d) {
+    const lines = [
+      d.tone?.trim() && `Tone (the vibe): ${d.tone.trim()}`,
+      d.style?.trim() && `Style (format & structure): ${d.style.trim()}`,
+      d.constraints?.trim() && `Context & constraints: ${d.constraints.trim()}`,
+      d.flow?.trim() && `Flow (how the script should move): ${d.flow.trim()}`,
+    ].filter(Boolean);
+    if (lines.length) user += `\n\nCreative direction for this script:\n${lines.join('\n')}`;
+  }
   if (opts.recentScripts?.length) {
     user += `\n\nScripts you already wrote for this channel (newest first) — do NOT repeat these hooks, angles, or stories; bring a fresh take:\n${opts.recentScripts
       .map((s, i) => `${i + 1}. "${s.title}" — hook: ${s.hook}`)
+      .join('\n')}`;
+  }
+  if (opts.avoidTitles?.length) {
+    user += `\n\nTitles already produced on this channel — do NOT reuse, closely paraphrase, or re-cover any of these topics:\n${opts.avoidTitles
+      .map((t) => `- ${t}`)
       .join('\n')}`;
   }
   if (opts.previousScript) {

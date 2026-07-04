@@ -37,10 +37,33 @@ const CAPTION_SYSTEM =
   'Under 500 characters total. No emojis in the first line; 1-2 emojis elsewhere are fine. ' +
   'Reply with ONLY the caption text.';
 
+// Optional: tailor the AI Script Generator dropdown options (New Video page) to
+// your industry. Omit this key to keep the industry-neutral built-in defaults.
+// Each field is a list of { label, prompt }; the label shows in the dropdown and
+// the prompt is the instruction sent to Claude. Only these four fields exist.
+const DIRECTION_PRESETS = {
+  tone: [
+    { label: 'Authoritative Expert', prompt: 'Authoritative expert: confident, precise, speaks from years of hands-on experience; no hedging.' },
+    { label: 'Friendly & Relatable', prompt: 'Friendly and relatable: warm, conversational, like advice from a trusted friend who happens to be the expert.' },
+  ],
+  style: [
+    { label: 'Problem → Fix', prompt: 'Problem-to-fix format: open on a pain the viewer recognizes, explain why it persists, land the proper fix.' },
+    { label: 'Before & After', prompt: 'Before-and-after format: contrast the stuck "before" state and the improved "after" state; reuse the same character across scenes.' },
+  ],
+  constraints: [
+    { label: 'Target busy professionals', prompt: 'Target audience for this script: busy working professionals who are short on time.' },
+    { label: 'Local / seasonal angle', prompt: 'Give this script a local, timely angle so it feels posted today, not evergreen.' },
+  ],
+  flow: [
+    { label: 'Hook → Problem → Solution → CTA', prompt: 'Flow: hook, then the problem the viewer recognizes, then the solution, then the call to action.' },
+  ],
+};
+
 const seeds = [
   ['brand_name', 'Your Brand'],
   ['script_system_prompt', SCRIPT_SYSTEM],
   ['caption_system_prompt', CAPTION_SYSTEM],
+  ['script_direction_presets', DIRECTION_PRESETS],
 ];
 
 for (const [key, value] of seeds) {

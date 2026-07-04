@@ -8,6 +8,13 @@ import {
   resolveRenderTemplate,
   type RenderTemplate,
 } from '@vd/shared/renderTemplate';
+import {
+  DEFAULT_DIRECTION_FIELDS,
+  presetsToText,
+  resolveDirectionFields,
+  textToPresets,
+  type DirectionField,
+} from '@/lib/scriptDirectionPresets';
 import { RenderTemplatePreview } from './RenderTemplatePreview';
 
 export interface BrandAssetRow {
@@ -69,6 +76,14 @@ export function SettingsClient({
   const [captionSaved, setCaptionSaved] = useState(false);
   const [tpl, setTpl] = useState<RenderTemplate>(() => resolveRenderTemplate(settings.render_template));
   const [tplSaved, setTplSaved] = useState(false);
+  const [directionText, setDirectionText] = useState<Record<DirectionField['key'], string>>(() => {
+    const resolved = resolveDirectionFields(settings.script_direction_presets);
+    return Object.fromEntries(resolved.map((f) => [f.key, presetsToText(f.presets)])) as Record<
+      DirectionField['key'],
+      string
+    >;
+  });
+  const [directionSaved, setDirectionSaved] = useState(false);
 
   const previewAsset = (kind: BrandAssetKind) =>
     brandAssets.find((a) => a.kind === kind && a.is_default) ?? brandAssets.find((a) => a.kind === kind);
@@ -510,6 +525,61 @@ export function SettingsClient({
           {savedPrompt && savedPrompt !== defaultScriptPrompt && (
             <span className="ml-auto text-xs text-neutral-500">custom prompt active</span>
           )}
+        </div>
+      </section>
+
+      <section className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
+        <h2 className="text-sm font-semibold text-neutral-300">AI Script Generator presets</h2>
+        <p className="text-xs text-neutral-500">
+          The dropdown options operators pick from on the New Video page when batch-generating
+          scripts. One preset per line as <code>Label | prompt text sent to Claude</code>. Leave a
+          field to use the built-in defaults. These only tailor the menu — the brand voice still
+          comes from the script prompt above.
+        </p>
+        {DEFAULT_DIRECTION_FIELDS.map((f) => (
+          <div key={f.key}>
+            <label className="mb-1 block text-xs font-medium text-neutral-400">{f.label}</label>
+            <textarea
+              value={directionText[f.key]}
+              onChange={(e) => {
+                setDirectionText((prev) => ({ ...prev, [f.key]: e.target.value }));
+                setDirectionSaved(false);
+              }}
+              rows={5}
+              spellCheck={false}
+              className="w-full rounded border border-neutral-700 bg-neutral-950 p-3 font-mono text-xs leading-relaxed text-neutral-200"
+            />
+          </div>
+        ))}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={async () => {
+              const value = Object.fromEntries(
+                DEFAULT_DIRECTION_FIELDS.map((f) => [f.key, textToPresets(directionText[f.key])]),
+              );
+              const ok = await saveSetting('script_direction_presets', value);
+              if (ok) setDirectionSaved(true);
+            }}
+            disabled={!!busy}
+            className="rounded bg-yellow-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-50"
+          >
+            {busy === 'script_direction_presets' ? 'Saving…' : 'Save presets'}
+          </button>
+          <button
+            onClick={() => {
+              setDirectionText(
+                Object.fromEntries(
+                  DEFAULT_DIRECTION_FIELDS.map((f) => [f.key, presetsToText(f.presets)]),
+                ) as Record<DirectionField['key'], string>,
+              );
+              setDirectionSaved(false);
+            }}
+            disabled={!!busy}
+            className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+          >
+            Reset to default
+          </button>
+          {directionSaved && <span className="text-xs text-emerald-400">Saved ✓</span>}
         </div>
       </section>
 

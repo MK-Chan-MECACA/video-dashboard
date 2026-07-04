@@ -5,6 +5,7 @@ import {
   type Asset,
   type Job,
   type Script,
+  type ScriptDirection,
   type ScriptVersion,
   type Video,
   type VideoStatus,
@@ -173,6 +174,63 @@ export async function createVideo(
   }
 
   return { video: video as Video, script };
+}
+
+/**
+ * AI Script Generator: Claude invents a fresh topic (no operator brief), titles it,
+ * writes the script, and the video lands directly in script_review for the client.
+ * Generation runs before the insert so an AI failure leaves no orphan row.
+ */
+export async function generateVideoFromDirection(
+  db: SupabaseClient,
+  direction: ScriptDirection = {},
+): Promise<{ video: Video; script: ScriptVersion }> {
+  const { systemPrompt, recentScripts, allTitles } = await getScriptGenContext(db);
+  const generated = await generateScript({
+    apiKey: process.env.ANTHROPIC_API_KEY!,
+    direction,
+    avoidTitles: allTitles,
+    systemPrompt,
+    recentScripts,
+  });
+
+  const directionNote = [
+    direction.tone?.trim() && `tone: ${direction.tone.trim()}`,
+    direction.style?.trim() && `style: ${direction.style.trim()}`,
+    direction.constraints?.trim() && `constraints: ${direction.constraints.trim()}`,
+    direction.flow?.trim() && `flow: ${direction.flow.trim()}`,
+  ]
+    .filter(Boolean)
+    .join('; ');
+
+  const { data: video, error } = await db
+    .from('videos')
+    .insert({
+      title: generated.title,
+      topic_brief: directionNote ? `AI-generated. Direction — ${directionNote}` : null,
+      status: 'draft',
+    })
+    .select()
+    .single();
+  if (error) throw new ApiError(500, error.message);
+
+  await logEvent(db, video.id, 'video_created');
+  const script = await saveScriptVersion(db, {
+    videoId: video.id,
+    script: generated,
+    createdBy: 'claude',
+    claudeModel: generated.model,
+  });
+  await logEvent(db, video.id, 'script_generated', { version: script.version });
+
+  const { error: statusErr } = await db
+    .from('videos')
+    .update({ status: 'script_review' })
+    .eq('id', video.id);
+  if (statusErr) throw new ApiError(500, statusErr.message);
+  await logEvent(db, video.id, 'sent_for_script_review');
+
+  return { video: { ...(video as Video), status: 'script_review' }, script };
 }
 
 export async function updateVideo(

@@ -3,14 +3,15 @@ import { fullVoiceoverText, type PastScript, type Script, type ScriptVersion } f
 
 /**
  * Context for Claude script generation: the operator's custom system prompt
- * (Settings → "Claude script generator") and the recent-script memory so new
- * scripts don't repeat earlier hooks/angles.
+ * (Settings → "Claude script generator"), the recent-script memory so new
+ * scripts don't repeat earlier hooks/angles, and every past title so
+ * AI-invented topics never re-cover old ground.
  */
 export async function getScriptGenContext(
   db: SupabaseClient,
   opts: { excludeVideoId?: string } = {},
-): Promise<{ systemPrompt?: string; recentScripts: PastScript[] }> {
-  const [{ data: setting }, { data: videos }] = await Promise.all([
+): Promise<{ systemPrompt?: string; recentScripts: PastScript[]; allTitles: string[] }> {
+  const [{ data: setting }, { data: videos }, { data: titleRows }] = await Promise.all([
     db.from('app_settings').select('value').eq('key', 'script_system_prompt').maybeSingle(),
     db
       .from('videos')
@@ -18,6 +19,7 @@ export async function getScriptGenContext(
       .not('current_script_version_id', 'is', null)
       .order('created_at', { ascending: false })
       .limit(21),
+    db.from('videos').select('id, title').order('created_at', { ascending: false }).limit(200),
   ]);
 
   const rows = (videos ?? []).filter((v) => v.id !== opts.excludeVideoId).slice(0, 20);
@@ -37,7 +39,10 @@ export async function getScriptGenContext(
   }
 
   const systemPrompt = typeof setting?.value === 'string' ? setting.value : undefined;
-  return { systemPrompt, recentScripts };
+  const allTitles = (titleRows ?? [])
+    .filter((v) => v.id !== opts.excludeVideoId)
+    .map((v) => v.title as string);
+  return { systemPrompt, recentScripts, allTitles };
 }
 
 /** Insert a new script version and point the video at it. */
