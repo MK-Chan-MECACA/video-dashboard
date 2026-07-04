@@ -33,7 +33,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/review') ||
     pathname.startsWith('/api/review') ||
     pathname.startsWith('/api/webhooks') ||
-    pathname.startsWith('/api/media');
+    pathname.startsWith('/api/media') ||
+    pathname.startsWith('/api/v1') ||
+    pathname.startsWith('/api/mcp');
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();

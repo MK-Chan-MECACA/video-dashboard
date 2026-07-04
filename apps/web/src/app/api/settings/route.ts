@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { requireOperator } from '@/lib/supabase';
 import { ghl, heygen, wavespeed } from '@/lib/services';
+import { sessionError } from '@/lib/apiResponse';
+import { getSettings, putSettings } from '@/lib/settingsService';
 
 /** GET ?voices=1 | ?ghl=1 | ?scene_models=1 — fetch pickers; plain GET returns saved settings. */
 export async function GET(req: Request) {
@@ -39,8 +41,7 @@ export async function GET(req: Request) {
     }
   }
 
-  const { data } = await supabase.from('app_settings').select('key, value');
-  return NextResponse.json(Object.fromEntries((data ?? []).map((r) => [r.key, r.value])));
+  return NextResponse.json(await getSettings(supabase));
 }
 
 /** Upsert settings. Body: { [key]: value } */
@@ -52,11 +53,10 @@ export async function PUT(req: Request) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
   const body = (await req.json()) as Record<string, unknown>;
-  for (const [key, value] of Object.entries(body)) {
-    const { error } = await supabase
-      .from('app_settings')
-      .upsert({ key, value, updated_at: new Date().toISOString() });
-    if (error) return new NextResponse(error.message, { status: 500 });
+  try {
+    await putSettings(supabase, body);
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return sessionError(e);
   }
-  return NextResponse.json({ ok: true });
 }

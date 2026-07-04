@@ -1,0 +1,26 @@
+{
+  "name": "ttm-video-mcp",
+  "version": "0.1.0",
+  "description": "stdio MCP server for the TTM Video Dashboard — proxies the dashboard REST API. Requires TTM_API_URL and TTM_API_KEY.",
+  "type": "module",
+  "bin": {
+    "ttm-video-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.26.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vd/shared": "workspace:*",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0"
+  }
+}

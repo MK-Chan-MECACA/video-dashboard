@@ -7,3 +7,4 @@ export * from './wavespeed';
 export * from './ghl';
 export * from './r2';
 export * from './claude';
+export * from './mcpToolDefs';
