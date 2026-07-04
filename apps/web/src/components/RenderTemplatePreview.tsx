@@ -102,21 +102,35 @@ function ScenePlaceholder() {
 }
 
 /**
- * The presenter, drawn from the real avatar reference when available. The
- * placeholder always renders underneath: a <video> stays fully transparent
- * until a frame decodes (and paints nothing at all on load failure or an
- * unsupported codec), which would leave the bubble invisible.
+ * The presenter, drawn from the real avatar reference when available. A
+ * worker-extracted poster frame is preferred over the raw video: browsers
+ * can't always decode the reference footage (e.g. Safari has no 10-bit H.264
+ * decoder). The placeholder always renders underneath: a <video> stays fully
+ * transparent until a frame decodes (and paints nothing at all on load
+ * failure or an unsupported codec), which would leave the bubble invisible.
  */
 function AvatarLayer({
   src,
+  posterSrc,
   isVideo,
   style,
 }: {
   src?: string | null;
+  posterSrc?: string | null;
   isVideo: boolean;
   style: CSSProperties;
 }) {
+  const [posterFailed, setPosterFailed] = useState(false);
   const [failed, setFailed] = useState(false);
+  if (posterSrc && !posterFailed) {
+    return (
+      <>
+        <AvatarPlaceholder style={style} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={posterSrc} alt="" style={style} onError={() => setPosterFailed(true)} />
+      </>
+    );
+  }
   return (
     <>
       <AvatarPlaceholder style={style} />
@@ -181,11 +195,13 @@ export function RenderTemplatePreview({
   tpl,
   logoSrc,
   avatarSrc,
+  avatarPosterSrc,
   avatarIsVideo,
 }: {
   tpl: RenderTemplate;
   logoSrc?: string | null;
   avatarSrc?: string | null;
+  avatarPosterSrc?: string | null;
   avatarIsVideo: boolean;
 }) {
   const [mode, setMode] = useState<'broll' | 'avatar'>('broll');
@@ -215,12 +231,17 @@ export function RenderTemplatePreview({
           {mode === 'broll' ? (
             <ScenePlaceholder />
           ) : (
-            <AvatarLayer src={avatarSrc} isVideo={avatarIsVideo} style={FULLSCREEN} />
+            <AvatarLayer src={avatarSrc} posterSrc={avatarPosterSrc} isVideo={avatarIsVideo} style={FULLSCREEN} />
           )}
 
           {mode === 'broll' && tpl.avatarBubble.enabled && (
             <>
-              <AvatarLayer src={avatarSrc} isVideo={avatarIsVideo} style={bubbleStyle(tpl.avatarBubble)} />
+              <AvatarLayer
+                src={avatarSrc}
+                posterSrc={avatarPosterSrc}
+                isVideo={avatarIsVideo}
+                style={bubbleStyle(tpl.avatarBubble)}
+              />
               <div style={bubbleRingStyle(tpl.avatarBubble)} />
             </>
           )}

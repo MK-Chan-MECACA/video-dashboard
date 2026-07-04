@@ -14,6 +14,7 @@ import {
 import { workerConcurrency } from './env';
 import { finalizeExternalJob, resultFromWebhookColumns } from './finalize';
 import { handleAvatar } from './handlers/avatar';
+import { generateMissingBrandPosters } from './handlers/brandPosters';
 import { handleCaption } from './handlers/caption';
 import { handleGenerateScript } from './handlers/generateScript';
 import { handleGhlPost } from './handlers/ghlPost';
@@ -23,6 +24,7 @@ import { handleTts } from './handlers/tts';
 
 const TICK_MS = 3000;
 const POSTS_CHECK_MS = 6 * 3600 * 1000; // "daily-ish": every 6 hours
+const POSTERS_CHECK_MS = 5 * 60 * 1000;
 
 const handlers: Record<JobType, (job: Job) => Promise<void>> = {
   generate_script: handleGenerateScript,
@@ -37,6 +39,7 @@ const handlers: Record<JobType, (job: Job) => Promise<void>> = {
 let stopping = false;
 const inFlight = new Set<Promise<void>>();
 let lastPostsCheck = 0;
+let lastPostersCheck = 0;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -124,6 +127,13 @@ async function tick(): Promise<void> {
   if (Date.now() - lastPostsCheck >= POSTS_CHECK_MS) {
     lastPostsCheck = Date.now();
     await checkScheduledPosts();
+  }
+
+  if (Date.now() - lastPostersCheck >= POSTERS_CHECK_MS) {
+    lastPostersCheck = Date.now();
+    await generateMissingBrandPosters().catch((err) =>
+      console.error('[posters] scan failed:', err),
+    );
   }
 }
 

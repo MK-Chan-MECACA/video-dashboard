@@ -40,6 +40,12 @@ export default async function SettingsPage() {
       is_default: a.is_default,
       created_at: a.created_at,
       media_url: await presignQuiet(a.r2_key),
+      // Worker-extracted poster frame (meta.poster_key) — the preview prefers
+      // it because browsers can't always decode the raw reference video
+      // (e.g. Safari has no 10-bit H.264 decoder).
+      poster_url: await presignQuiet(
+        (a.meta as Record<string, unknown> | null)?.poster_key as string | undefined,
+      ),
     })),
   );
 
