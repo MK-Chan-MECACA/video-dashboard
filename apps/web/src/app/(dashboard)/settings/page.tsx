@@ -1,9 +1,21 @@
 import { DEFAULT_CAPTION_SYSTEM, DEFAULT_SCRIPT_SYSTEM, type BrandAssetKind } from '@vd/shared';
 import { supabaseServer } from '@/lib/supabase';
+import { r2 } from '@/lib/services';
 import { SettingsClient, type BrandAssetRow } from '@/components/SettingsClient';
 import { ApiKeysSection, type ApiKeyRow } from '@/components/ApiKeysSection';
 
 export const dynamic = 'force-dynamic';
+
+/** Presigned GET for an R2 key, or null when the key is missing or signing fails
+ * (the client falls back to the authed media redirect route). */
+async function presignQuiet(r2Key: string | null | undefined): Promise<string | null> {
+  if (!r2Key) return null;
+  try {
+    return await r2().presignGet(r2Key);
+  } catch {
+    return null;
+  }
+}
 
 export default async function SettingsPage() {
   const supabase = await supabaseServer();
@@ -16,16 +28,25 @@ export default async function SettingsPage() {
       .order('created_at', { ascending: false }),
   ]);
 
+  // Presign media URLs server-side so the layout preview loads straight from R2.
+  // A <video> re-requests its src for metadata probes and seeks; routing those
+  // through the authed /api/brand-assets/[id]/media redirect is fragile (any
+  // transient 401/refresh race permanently blanks the preview media).
+  const brandAssetRows = await Promise.all(
+    (brandAssets ?? []).map(async (a) => ({
+      id: a.id,
+      kind: a.kind as BrandAssetKind,
+      name: a.name,
+      is_default: a.is_default,
+      created_at: a.created_at,
+      media_url: await presignQuiet(a.r2_key),
+    })),
+  );
+
   return (
     <>
       <SettingsClient
-        brandAssets={(brandAssets ?? []).map((a) => ({
-          id: a.id,
-          kind: a.kind as BrandAssetKind,
-          name: a.name,
-          is_default: a.is_default,
-          created_at: a.created_at,
-        })) as BrandAssetRow[]}
+        brandAssets={brandAssetRows as BrandAssetRow[]}
         settings={Object.fromEntries((settings ?? []).map((r) => [r.key, r.value]))}
         defaultScriptPrompt={DEFAULT_SCRIPT_SYSTEM}
         defaultCaptionPrompt={DEFAULT_CAPTION_SYSTEM}

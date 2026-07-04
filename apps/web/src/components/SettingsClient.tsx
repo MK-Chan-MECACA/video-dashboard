@@ -16,6 +16,8 @@ export interface BrandAssetRow {
   name: string;
   is_default: boolean;
   created_at: string;
+  /** Presigned R2 URL for direct preview loading; null when signing was unavailable. */
+  media_url: string | null;
 }
 
 const KINDS: { kind: BrandAssetKind; label: string; hint: string }[] = [
@@ -454,8 +456,8 @@ export function SettingsClient({
           <div className="md:sticky md:top-4">
             <RenderTemplatePreview
               tpl={resolveRenderTemplate(tpl)}
-              logoSrc={logoAsset ? `/api/brand-assets/${logoAsset.id}/media` : null}
-              avatarSrc={avatarAsset ? `/api/brand-assets/${avatarAsset.id}/media` : null}
+              logoSrc={logoAsset ? logoAsset.media_url ?? `/api/brand-assets/${logoAsset.id}/media` : null}
+              avatarSrc={avatarAsset ? avatarAsset.media_url ?? `/api/brand-assets/${avatarAsset.id}/media` : null}
               avatarIsVideo={/\.(mp4|mov|webm)$/i.test(avatarAsset?.name ?? '')}
             />
           </div>
