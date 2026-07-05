@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             </span>
             <span className="hidden text-[15px] sm:inline">{brandName || 'Video Dashboard'}</span>
           </Link>
-          <nav className="ml-auto flex items-center gap-3 text-sm text-studio-sub sm:gap-5">
+          <nav className="flex items-center gap-3 text-sm text-studio-sub sm:ml-2 sm:gap-[22px]">
             <Link href="/" className="whitespace-nowrap hover:text-studio-bright">Pipeline</Link>
             <Link href="/videos/new" className="whitespace-nowrap hover:text-studio-bright">New Video</Link>
             <Link href="/guide" className="whitespace-nowrap hover:text-studio-bright">How to use</Link>

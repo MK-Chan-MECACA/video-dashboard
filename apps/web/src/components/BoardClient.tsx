@@ -81,54 +81,79 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
     router.refresh();
   }
 
+  const inReviewCount = videos.filter(
+    (v) => v.status === 'script_review' || v.status === 'video_review',
+  ).length;
+  // Sum the pre-formatted cost strings ("$4.53" / "~$4.53") for the spend card.
+  const spendUsd = videos.reduce((sum, v) => {
+    const m = v.cost ? /([0-9]+(?:\.[0-9]+)?)/.exec(v.cost) : null;
+    return sum + (m ? parseFloat(m[1]) : 0);
+  }, 0);
   const attention = [
     {
-      count: videos.filter((v) => v.status === 'script_review' || v.status === 'video_review').length,
+      value: String(inReviewCount),
       label: 'In review — awaiting a decision',
       dot: '#e9b949',
+      highlight: true,
     },
     {
-      count: videos.filter((v) =>
-        ['script_approved', 'voice_generating', 'avatar_generating', 'scenes_generating', 'rendering'].includes(
-          v.status,
-        ),
-      ).length,
+      value: String(
+        videos.filter((v) =>
+          ['script_approved', 'voice_generating', 'avatar_generating', 'scenes_generating', 'rendering'].includes(
+            v.status,
+          ),
+        ).length,
+      ),
       label: 'Generating & rendering now',
       dot: '#6aa9ff',
+      highlight: false,
     },
     {
-      count: videos.filter((v) => v.status === 'failed').length,
+      value: String(videos.filter((v) => v.status === 'failed').length),
       label: 'Failed — needs a retry',
       dot: '#f0846a',
+      highlight: false,
+    },
+    {
+      value: `~$${Math.round(spendUsd)}`,
+      label: 'Est. generation spend',
+      dot: '#63d2a4',
+      highlight: false,
     },
   ];
 
   return (
     <div>
-      <div className="studio-eyebrow mb-1.5">Production pipeline</div>
-      <div className="mb-5 flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight text-studio-bright">Pipeline</h1>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Filter — V4, 12, or title…"
-          className="w-52 rounded-[9px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm text-studio-text placeholder:text-studio-muted"
-        />
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value as SortMode)}
-          className="rounded-[9px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm text-studio-sub"
-        >
-          <option value="recent">Recently updated</option>
-          <option value="no_asc">Number ↑ (V1 first)</option>
-          <option value="no_desc">Number ↓ (newest first)</option>
-        </select>
-        <Link
-          href="/videos/new"
-          className="studio-lift ml-auto rounded-[9px] bg-studio-accent px-4 py-2 text-sm font-semibold text-studio-on-accent"
-        >
-          + New Video
-        </Link>
+      <div className="mb-1.5 flex flex-wrap items-end justify-between gap-5">
+        <div>
+          <div className="studio-eyebrow mb-1.5">Production pipeline</div>
+          <h1 className="text-3xl font-semibold tracking-tight text-studio-bright">
+            {videos.length} video{videos.length === 1 ? '' : 's'} in flight
+          </h1>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Filter — V4, 12, or title…"
+            className="w-[230px] rounded-[9px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-[13px] text-studio-text placeholder:text-studio-muted"
+          />
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortMode)}
+            className="rounded-[9px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-[13px] text-studio-sub"
+          >
+            <option value="recent">Recently updated</option>
+            <option value="no_asc">Number ↑ (V1 first)</option>
+            <option value="no_desc">Number ↓ (newest first)</option>
+          </select>
+          <Link
+            href="/videos/new"
+            className="studio-lift rounded-[9px] bg-studio-accent px-4 py-2 text-[13px] font-semibold text-studio-on-accent"
+          >
+            + New Video
+          </Link>
+        </div>
       </div>
 
       {error && (
@@ -136,16 +161,26 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
       )}
 
       {videos.length > 0 && (
-        <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="my-6 flex flex-col gap-3 sm:flex-row">
           {attention.map((a) => (
             <div
               key={a.label}
-              className="flex items-center gap-3 rounded-[12px] border border-studio bg-studio-inset px-4 py-3.5"
+              className={`flex flex-1 items-center gap-3 rounded-[12px] border px-[17px] py-[15px] ${
+                a.highlight
+                  ? 'border-[#3a2f16] bg-[linear-gradient(180deg,#1e1a10,#161410)]'
+                  : 'border-studio bg-studio-inset'
+              }`}
             >
-              <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: a.dot }} />
+              <span
+                className="h-2 w-2 shrink-0 rounded-full"
+                style={{
+                  backgroundColor: a.dot,
+                  boxShadow: a.highlight ? '0 0 0 4px rgba(233,185,73,.15)' : undefined,
+                }}
+              />
               <div>
-                <div className="text-2xl font-semibold leading-none text-studio-bright">{a.count}</div>
-                <div className="mt-1.5 text-xs text-studio-sub">{a.label}</div>
+                <div className="text-[23px] font-semibold leading-none text-studio-bright">{a.value}</div>
+                <div className="mt-1 text-xs text-studio-sub">{a.label}</div>
               </div>
             </div>
           ))}
@@ -171,28 +206,27 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
                 if (id) moveTo(id, col.statuses[0]);
                 setDragId(null);
               }}
-              className={`w-[242px] shrink-0 rounded-[12px] border p-3 transition-colors ${
-                isDropTarget
-                  ? 'border-studio-border-hover bg-studio-inset ring-1 ring-studio-accent'
-                  : 'border-studio bg-studio-panel'
+              className={`w-[242px] shrink-0 rounded-[12px] transition-colors ${
+                isDropTarget ? 'bg-studio-inset ring-1 ring-studio-accent' : ''
               }`}
             >
               <div className="mb-2.5 flex items-center gap-2">
                 <span className="font-mono text-[11px] text-studio-muted">
                   {String(i + 1).padStart(2, '0')}
                 </span>
-                <span className="text-sm font-semibold text-studio-sub">{col.title}</span>
-                <span className="ml-auto rounded-full bg-studio-inset px-2 text-[11px] text-studio-muted">
+                <span className="text-[13px] font-semibold text-[#d8cfbf]">{col.title}</span>
+                <span className="ml-auto rounded-full bg-[#201d18] px-2 py-px text-[11px] text-studio-sub">
                   {items.length}
                 </span>
               </div>
               <div
-                className="mb-3 h-[3px] rounded-full"
+                className="mb-3 h-[3px] rounded-[2px]"
                 style={{ backgroundColor: COLUMN_ACCENT[col.title] ?? '#2a2723' }}
               />
-              <div className="space-y-2.5">
+              <div className="space-y-2.5 pb-2">
                 {items.map((v) => {
                   const failed = v.status === 'failed';
+                  const attn = v.status === 'script_review' || v.status === 'video_review';
                   return (
                     <Link
                       key={v.id}
@@ -208,7 +242,11 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
                         setDropCol(null);
                       }}
                       className={`studio-card block cursor-grab rounded-[12px] border p-3 active:cursor-grabbing ${
-                        failed ? 'border-[#4a2018] bg-[#1c110d]' : 'border-studio bg-studio-card'
+                        failed
+                          ? 'border-[#4a2018] bg-[#1c110d]'
+                          : attn
+                            ? 'border-[#3a2f16] bg-[#17140d]'
+                            : 'border-studio-border-strong bg-studio-card'
                       } ${dragId === v.id ? 'opacity-40' : ''}`}
                     >
                       <p className="mb-2 line-clamp-2 text-sm font-medium text-studio-text">
@@ -222,7 +260,7 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
                       <span className="flex flex-wrap items-center gap-1.5">
                         <StatusBadge status={v.status} />
                         {v.cost && (
-                          <span className="rounded-[5px] bg-studio-inset px-1.5 py-0.5 font-mono text-[10px] text-studio-muted">
+                          <span className="rounded-[5px] bg-[#201d18] px-1.5 py-0.5 font-mono text-[10px] text-studio-muted">
                             {v.cost}
                           </span>
                         )}
