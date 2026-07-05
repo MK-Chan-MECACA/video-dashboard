@@ -1,12 +1,16 @@
 import type { Asset, Job, Video } from '@vd/shared';
 import { estimateVideoCost, formatUsd } from '@vd/shared/pricing';
-import { supabaseServer } from '@/lib/supabase';
+import { supabaseServer, roleOf } from '@/lib/supabase';
 import { BoardClient, type BoardVideo } from '@/components/BoardClient';
 
 export const dynamic = 'force-dynamic';
 
 export default async function BoardPage() {
   const supabase = await supabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const readOnly = user ? roleOf(user) === 'client' : false;
   const [{ data: videos, error }, { data: assets }, { data: jobs }] = await Promise.all([
     supabase.from('videos').select('*').order('updated_at', { ascending: false }),
     supabase
@@ -36,6 +40,7 @@ export default async function BoardPage() {
 
   return (
     <BoardClient
+      readOnly={readOnly}
       videos={((videos ?? []) as Video[]).map((v): BoardVideo => {
         const cost = estimateVideoCost(assetsByVideo.get(v.id) ?? [], jobsByVideo.get(v.id) ?? []);
         return {
@@ -44,7 +49,8 @@ export default async function BoardPage() {
           title: v.title,
           status: v.status,
           status_error: v.status_error,
-          cost: cost.totalUsd >= 0.05 ? formatUsd(cost.totalUsd, cost.approx) : null,
+          // Generation spend is agency-internal — never sent to client reviewers.
+          cost: !readOnly && cost.totalUsd >= 0.05 ? formatUsd(cost.totalUsd, cost.approx) : null,
         };
       })}
     />

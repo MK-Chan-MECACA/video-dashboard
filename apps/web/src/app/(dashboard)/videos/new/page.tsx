@@ -1,4 +1,5 @@
-import { supabaseServer } from '@/lib/supabase';
+import { redirect } from 'next/navigation';
+import { supabaseServer, roleOf } from '@/lib/supabase';
 import { resolveDirectionFields } from '@/lib/scriptDirectionPresets';
 import AiScriptGenerator from '@/components/AiScriptGenerator';
 import NewVideoManualForm from '@/components/NewVideoManualForm';
@@ -7,6 +8,10 @@ export const dynamic = 'force-dynamic';
 
 export default async function NewVideoPage() {
   const supabase = await supabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user && roleOf(user) !== 'operator') redirect('/');
   const { data: setting } = await supabase
     .from('app_settings')
     .select('value')

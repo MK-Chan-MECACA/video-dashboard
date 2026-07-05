@@ -1,8 +1,11 @@
 import { DEFAULT_CAPTION_SYSTEM, DEFAULT_SCRIPT_SYSTEM, type BrandAssetKind } from '@vd/shared';
-import { supabaseServer } from '@/lib/supabase';
+import { redirect } from 'next/navigation';
+import { supabaseServer, roleOf } from '@/lib/supabase';
 import { r2 } from '@/lib/services';
 import { SettingsClient, type BrandAssetRow } from '@/components/SettingsClient';
 import { ApiKeysSection, type ApiKeyRow } from '@/components/ApiKeysSection';
+import { UsersSection } from '@/components/UsersSection';
+import { listDashboardUsers } from '@/lib/users';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,13 +22,18 @@ async function presignQuiet(r2Key: string | null | undefined): Promise<string | 
 
 export default async function SettingsPage() {
   const supabase = await supabaseServer();
-  const [{ data: brandAssets }, { data: settings }, { data: apiKeys }] = await Promise.all([
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user && roleOf(user) !== 'operator') redirect('/');
+  const [{ data: brandAssets }, { data: settings }, { data: apiKeys }, users] = await Promise.all([
     supabase.from('brand_assets').select('*').order('created_at', { ascending: false }),
     supabase.from('app_settings').select('key, value'),
     supabase
       .from('api_keys')
       .select('id, name, key_prefix, scopes, created_at, last_used_at, revoked_at')
       .order('created_at', { ascending: false }),
+    listDashboardUsers().catch(() => []),
   ]);
 
   // Presign media URLs server-side so the layout preview loads straight from R2.
@@ -56,6 +64,7 @@ export default async function SettingsPage() {
       defaultScriptPrompt={DEFAULT_SCRIPT_SYSTEM}
       defaultCaptionPrompt={DEFAULT_CAPTION_SYSTEM}
     >
+      <UsersSection users={users} />
       <ApiKeysSection apiKeys={(apiKeys ?? []) as ApiKeyRow[]} />
     </SettingsClient>
   );

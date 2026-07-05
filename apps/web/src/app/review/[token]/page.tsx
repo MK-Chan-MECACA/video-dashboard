@@ -65,7 +65,10 @@ export default async function ReviewPage({ params }: { params: Promise<{ token: 
 
   return (
     <ReviewClient
-      token={token}
+      endpoints={{
+        decision: `/api/review/${token}/decision`,
+        comment: `/api/review/${token}/comment`,
+      }}
       brandName={brandName}
       kind={link.kind}
       videoTitle={v.title}

@@ -31,7 +31,14 @@ const COLUMN_ACCENT: Record<string, string> = {
   Failed: '#f0846a',
 };
 
-export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
+export function BoardClient({
+  videos: initial,
+  readOnly = false,
+}: {
+  videos: BoardVideo[];
+  /** Client-reviewer mode: no drag, no New Video, no spend — review focus instead. */
+  readOnly?: boolean;
+}) {
   const router = useRouter();
   const [videos, setVideos] = useState(initial);
   const [query, setQuery] = useState('');
@@ -65,6 +72,7 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
   }
 
   async function moveTo(videoId: string, status: VideoStatus) {
+    if (readOnly) return;
     const prev = videos;
     setVideos((vs) => vs.map((v) => (v.id === videoId ? { ...v, status } : v)));
     setError(null);
@@ -89,10 +97,13 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
     const m = v.cost ? /([0-9]+(?:\.[0-9]+)?)/.exec(v.cost) : null;
     return sum + (m ? parseFloat(m[1]) : 0);
   }, 0);
+  const pendingReview = videos.filter(
+    (v) => v.status === 'script_review' || v.status === 'video_review',
+  );
   const attention = [
     {
       value: String(inReviewCount),
-      label: 'In review — awaiting a decision',
+      label: readOnly ? 'Awaiting your review' : 'In review — awaiting a decision',
       dot: '#e9b949',
       highlight: true,
     },
@@ -114,12 +125,16 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
       dot: '#f0846a',
       highlight: false,
     },
-    {
-      value: `~$${Math.round(spendUsd)}`,
-      label: 'Est. generation spend',
-      dot: '#63d2a4',
-      highlight: false,
-    },
+    ...(readOnly
+      ? []
+      : [
+          {
+            value: `~$${Math.round(spendUsd)}`,
+            label: 'Est. generation spend',
+            dot: '#63d2a4',
+            highlight: false,
+          },
+        ]),
   ];
 
   return (
@@ -147,17 +162,45 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
             <option value="no_asc">Number ↑ (V1 first)</option>
             <option value="no_desc">Number ↓ (newest first)</option>
           </select>
-          <Link
-            href="/videos/new"
-            className="studio-lift rounded-[9px] bg-studio-accent px-4 py-2 text-[13px] font-semibold text-studio-on-accent"
-          >
-            + New Video
-          </Link>
+          {!readOnly && (
+            <Link
+              href="/videos/new"
+              className="studio-lift rounded-[9px] bg-studio-accent px-4 py-2 text-[13px] font-semibold text-studio-on-accent"
+            >
+              + New Video
+            </Link>
+          )}
         </div>
       </div>
 
       {error && (
         <p className="mb-3 rounded-[8px] bg-red-950 p-2 text-sm text-red-300">{error}</p>
+      )}
+
+      {readOnly && pendingReview.length > 0 && (
+        <div className="my-6 rounded-[12px] border border-[#3a2f16] bg-[linear-gradient(180deg,#1e1a10,#161410)] p-4">
+          <p className="mb-2.5 text-sm font-semibold text-studio-bright">
+            Pending your review — {pendingReview.length} video
+            {pendingReview.length === 1 ? '' : 's'}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {pendingReview.map((v) => (
+              <Link
+                key={v.id}
+                href={`/videos/${v.id}`}
+                className="studio-lift flex items-center gap-2 rounded-[9px] border border-studio-border-strong bg-studio-card px-3 py-2 text-[13px] text-studio-text"
+              >
+                {v.video_no && (
+                  <span className="font-mono text-xs text-studio-accent">V{v.video_no}</span>
+                )}
+                <span className="max-w-[260px] truncate">{v.title}</span>
+                <span className="rounded-[5px] bg-[#201d18] px-1.5 py-0.5 text-[10px] text-studio-sub">
+                  {v.status === 'script_review' ? 'script' : 'video'}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
       )}
 
       {videos.length > 0 && (
@@ -231,8 +274,9 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
                     <Link
                       key={v.id}
                       href={`/videos/${v.id}`}
-                      draggable
+                      draggable={!readOnly}
                       onDragStart={(e) => {
+                        if (readOnly) return;
                         e.dataTransfer.setData('text/plain', v.id);
                         e.dataTransfer.effectAllowed = 'move';
                         setDragId(v.id);
@@ -241,7 +285,9 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
                         setDragId(null);
                         setDropCol(null);
                       }}
-                      className={`studio-card block cursor-grab rounded-[12px] border p-3 active:cursor-grabbing ${
+                      className={`studio-card block rounded-[12px] border p-3 ${
+                        readOnly ? '' : 'cursor-grab active:cursor-grabbing'
+                      } ${
                         failed
                           ? 'border-[#4a2018] bg-[#1c110d]'
                           : attn
@@ -277,9 +323,11 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
           );
         })}
       </div>
-      <p className="mt-3.5 text-xs text-studio-faint">
-        Drag a card into another column to move it to that stage.
-      </p>
+      {!readOnly && (
+        <p className="mt-3.5 text-xs text-studio-faint">
+          Drag a card into another column to move it to that stage.
+        </p>
+      )}
     </div>
   );
 }

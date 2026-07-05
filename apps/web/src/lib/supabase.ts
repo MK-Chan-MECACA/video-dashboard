@@ -1,6 +1,14 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { ApiError } from '@/lib/apiAuth';
+
+export type Role = 'operator' | 'client';
+
+/** Missing claim = operator: the app is invite-only, so pre-role users are all operators. */
+export function roleOf(user: User): Role {
+  return user.app_metadata?.role === 'client' ? 'client' : 'operator';
+}
 
 /** Session-aware client for server components / route handlers (operator auth, RLS). */
 export async function supabaseServer(): Promise<SupabaseClient> {
@@ -36,11 +44,19 @@ export function supabaseAdmin(): SupabaseClient {
   );
 }
 
-export async function requireOperator() {
+/** Any logged-in user (operator or client). 401 when there is no session. */
+export async function requireUser() {
   const supabase = await supabaseServer();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) throw new Error('unauthorized');
-  return { supabase, user };
+  if (!user) throw new ApiError(401, 'unauthorized');
+  return { supabase, user, role: roleOf(user) };
+}
+
+/** Operator-only routes. 403 for client sessions. */
+export async function requireOperator() {
+  const ctx = await requireUser();
+  if (ctx.role !== 'operator') throw new ApiError(403, 'forbidden');
+  return ctx;
 }

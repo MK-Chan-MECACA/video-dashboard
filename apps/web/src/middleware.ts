@@ -30,6 +30,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isPublic =
     pathname.startsWith('/login') ||
+    pathname.startsWith('/auth') ||
     pathname.startsWith('/review') ||
     pathname.startsWith('/api/review') ||
     pathname.startsWith('/api/webhooks') ||
@@ -41,6 +42,27 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
+  }
+
+  // Client reviewers: read + review only. API routes are enforced again by
+  // requireOperator(); this gate keeps operator pages out of reach entirely.
+  if (user?.app_metadata?.role === 'client') {
+    const operatorPage =
+      pathname.startsWith('/settings') ||
+      pathname.startsWith('/videos/new') ||
+      pathname.startsWith('/docs') ||
+      pathname.startsWith('/guide');
+    const operatorApi =
+      pathname.startsWith('/api/settings') ||
+      pathname.startsWith('/api/keys') ||
+      pathname.startsWith('/api/brand-assets') ||
+      pathname.startsWith('/api/users');
+    if (operatorApi) return new NextResponse('forbidden', { status: 403 });
+    if (operatorPage) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;

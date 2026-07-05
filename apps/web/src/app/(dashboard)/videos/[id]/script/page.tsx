@@ -1,6 +1,6 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { resolveTargetDurationS, type ScriptVersion, type Video } from '@vd/shared';
-import { supabaseServer } from '@/lib/supabase';
+import { supabaseServer, roleOf } from '@/lib/supabase';
 import { ScriptEditor } from '@/components/ScriptEditor';
 
 export const dynamic = 'force-dynamic';
@@ -8,6 +8,10 @@ export const dynamic = 'force-dynamic';
 export default async function ScriptPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await supabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user && roleOf(user) !== 'operator') redirect(`/videos/${id}`);
 
   const { data: video } = await supabase.from('videos').select('*').eq('id', id).single();
   if (!video) notFound();

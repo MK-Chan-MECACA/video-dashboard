@@ -42,7 +42,7 @@ function scriptSections(script: ReviewScript, videoNo: number | null | undefined
 }
 
 export function ReviewClient({
-  token,
+  endpoints,
   brandName,
   kind,
   videoTitle,
@@ -51,8 +51,10 @@ export function ReviewClient({
   lastDecision,
   script,
   mediaUrl,
+  reviewerName,
 }: {
-  token: string;
+  /** Where to POST — token URLs on the magic-link page, session URLs in the dashboard. */
+  endpoints: { decision: string; comment: string };
   brandName?: string | null;
   kind: 'script' | 'video';
   videoTitle: string;
@@ -61,8 +63,10 @@ export function ReviewClient({
   lastDecision: { decision: string; reviewer_name: string; created_at: string } | null;
   script: ReviewScript | null;
   mediaUrl: string | null;
+  /** Logged-in reviewer identity — locks the name field to their account email. */
+  reviewerName?: string;
 }) {
-  const [name, setName] = useState('');
+  const [name, setName] = useState(reviewerName ?? '');
   const [comment, setComment] = useState<Record<string, string>>({});
   const [changeNote, setChangeNote] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
@@ -71,8 +75,8 @@ export function ReviewClient({
   const [sentComments, setSentComments] = useState<string[]>([]);
 
   useEffect(() => {
-    setName(localStorage.getItem('vd_reviewer_name') ?? '');
-  }, []);
+    if (!reviewerName) setName(localStorage.getItem('vd_reviewer_name') ?? '');
+  }, [reviewerName]);
 
   function remember(n: string) {
     setName(n);
@@ -84,10 +88,10 @@ export function ReviewClient({
     if (!body) return;
     setBusy(`c-${sectionKey}`);
     setError(null);
-    const res = await fetch(`/api/review/${token}/comment`, {
+    const res = await fetch(endpoints.comment, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ section_key: sectionKey, body, author_name: name }),
+      body: JSON.stringify({ kind, section_key: sectionKey, body, author_name: name }),
     });
     setBusy(null);
     if (!res.ok) return setError(await res.text());
@@ -98,10 +102,10 @@ export function ReviewClient({
   async function decide(decision: 'approved' | 'changes_requested') {
     setBusy(decision);
     setError(null);
-    const res = await fetch(`/api/review/${token}/decision`, {
+    const res = await fetch(endpoints.decision, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ decision, comment: changeNote, reviewer_name: name }),
+      body: JSON.stringify({ kind, decision, comment: changeNote, reviewer_name: name }),
     });
     setBusy(null);
     if (!res.ok) return setError(await res.text());
@@ -203,12 +207,18 @@ export function ReviewClient({
         <div className="fixed inset-x-0 bottom-0 border-t border-studio-border bg-studio-card/95 p-4 backdrop-blur">
           <div className="mx-auto max-w-xl space-y-2">
             <div className="flex flex-col gap-2 sm:flex-row">
-              <input
-                value={name}
-                onChange={(e) => remember(e.target.value)}
-                placeholder="Your name"
-                className="rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm sm:w-40"
-              />
+              {reviewerName ? (
+                <span className="self-center whitespace-nowrap text-xs text-studio-muted sm:w-40 sm:truncate">
+                  {reviewerName}
+                </span>
+              ) : (
+                <input
+                  value={name}
+                  onChange={(e) => remember(e.target.value)}
+                  placeholder="Your name"
+                  className="rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm sm:w-40"
+                />
+              )}
               <input
                 value={changeNote}
                 onChange={(e) => setChangeNote(e.target.value)}

@@ -486,6 +486,9 @@ export async function applyReviewDecision(
     comment?: string;
     reviewer_name?: string;
     review_link_id: string | null;
+    /** Set for logged-in (session) reviewers; null/absent for token links and API keys. */
+    reviewer_user_id?: string;
+    reviewer_email?: string;
   },
 ): Promise<void> {
   if (opts.decision !== 'approved' && opts.decision !== 'changes_requested') {
@@ -513,6 +516,9 @@ export async function applyReviewDecision(
     decision: opts.decision,
     comment: opts.comment?.trim() || null,
     reviewer_name: opts.reviewer_name?.trim() || 'Reviewer',
+    // Spread so token/API flows keep their pre-0005 insert shape (columns may not exist yet).
+    ...(opts.reviewer_user_id ? { reviewer_user_id: opts.reviewer_user_id } : {}),
+    ...(opts.reviewer_email ? { reviewer_email: opts.reviewer_email } : {}),
   });
 
   if (opts.decision === 'changes_requested') {
@@ -525,6 +531,8 @@ export async function applyReviewDecision(
         section_key: opts.kind === 'video' ? 'video' : 'hook',
         author_name: opts.reviewer_name?.trim() || 'Reviewer',
         body: opts.comment.trim(),
+        ...(opts.reviewer_user_id ? { reviewer_user_id: opts.reviewer_user_id } : {}),
+        ...(opts.reviewer_email ? { reviewer_email: opts.reviewer_email } : {}),
       });
     }
     await db.from('pipeline_events').insert({

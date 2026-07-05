@@ -10,11 +10,12 @@ import {
   type Video,
 } from '@vd/shared';
 import { estimateVideoCost, formatUsd } from '@vd/shared/pricing';
-import { supabaseServer } from '@/lib/supabase';
+import { supabaseServer, roleOf } from '@/lib/supabase';
 import { ScriptView } from '@/components/ScriptView';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DeleteVideoButton, VideoNumberBadge } from '@/components/VideoAdmin';
 import { VideoActions } from '@/components/VideoActions';
+import { ReviewClient } from '@/components/ReviewClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,10 @@ export default async function VideoDetailPage({
 }) {
   const { id } = await params;
   const supabase = await supabaseServer();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isOperator = user ? roleOf(user) === 'operator' : true;
 
   const [{ data: video }, { data: assets }, { data: jobs }, { data: links }, { data: events }, { data: comments }, { data: approvals }, { data: targetSetting }] =
     await Promise.all([
@@ -77,6 +82,15 @@ export default async function VideoDetailPage({
   const hatch =
     'repeating-linear-gradient(135deg,#221d14,#221d14 6px,#1a160f 6px,#1a160f 12px)';
 
+  // Client reviewers get the review panel in place of the operator sections.
+  const clientReviewKind: 'script' | 'video' | null = !isOperator
+    ? v.status === 'script_review'
+      ? 'script'
+      : v.status === 'video_review'
+        ? 'video'
+        : null
+    : null;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
@@ -89,12 +103,14 @@ export default async function VideoDetailPage({
         {v.video_no && <VideoNumberBadge videoId={v.id} videoNo={v.video_no} />}
         <h1 className="text-[19px] font-semibold text-studio-bright">{v.title}</h1>
         <StatusBadge status={v.status} />
-        <Link
-          href={`/videos/${v.id}/script`}
-          className="ml-auto rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#d8cfbf] transition-colors hover:bg-[#201d18] hover:text-studio-bright"
-        >
-          Open script editor →
-        </Link>
+        {isOperator && (
+          <Link
+            href={`/videos/${v.id}/script`}
+            className="ml-auto rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#d8cfbf] transition-colors hover:bg-[#201d18] hover:text-studio-bright"
+          >
+            Open script editor →
+          </Link>
+        )}
       </div>
 
       {v.status === 'failed' && v.status_error && (
@@ -105,7 +121,39 @@ export default async function VideoDetailPage({
 
       <div className="grid items-start gap-[22px] lg:grid-cols-[1.9fr_1fr]">
         <div className="min-w-0 space-y-[18px]">
-          {script && (
+          {clientReviewKind && (
+            <section className="rounded-[14px] border border-[#3a2f16] bg-studio-panel p-5">
+              <ReviewClient
+                endpoints={{
+                  decision: `/api/videos/${v.id}/review/decision`,
+                  comment: `/api/videos/${v.id}/review/comment`,
+                }}
+                kind={clientReviewKind}
+                videoTitle={v.title}
+                videoNo={v.video_no}
+                awaiting
+                lastDecision={null}
+                reviewerName={user?.email ?? 'Reviewer'}
+                script={
+                  script
+                    ? {
+                        hook: script.hook,
+                        cta: script.cta,
+                        scenes: script.scenes.map((s) => ({
+                          index: s.index,
+                          voiceover: s.voiceover,
+                          broll_prompt: s.broll_prompt,
+                        })),
+                        version: script.version,
+                      }
+                    : null
+                }
+                mediaUrl={finalVideo ? `/api/media/${finalVideo.id}` : null}
+              />
+            </section>
+          )}
+
+          {!clientReviewKind && script && (
             <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
               <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
                 <h2 className="text-sm font-semibold text-studio-bright">
@@ -130,6 +178,7 @@ export default async function VideoDetailPage({
             </section>
           )}
 
+          {!clientReviewKind && (
           <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
             <h2 className="mb-3.5 text-sm font-semibold text-[#d8cfbf]">Generated assets</h2>
             <div className="mb-3.5">
@@ -190,30 +239,35 @@ export default async function VideoDetailPage({
               )}
             </div>
           </section>
+          )}
 
-          <VideoActions
-            video={v}
-            links={(links ?? []).map((l) => ({
-              id: l.id,
-              kind: l.kind,
-              revoked: l.revoked,
-              expires_at: l.expires_at,
-              created_at: l.created_at,
-            }))}
-          />
+          {isOperator && (
+            <VideoActions
+              video={v}
+              links={(links ?? []).map((l) => ({
+                id: l.id,
+                kind: l.kind,
+                revoked: l.revoked,
+                expires_at: l.expires_at,
+                created_at: l.created_at,
+              }))}
+            />
+          )}
 
-          <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
-            <h2 className="mb-2.5 text-sm font-semibold text-[#d8cfbf]">Danger zone</h2>
-            <DeleteVideoButton videoId={v.id} videoNo={v.video_no} title={v.title} />
-            <p className="mt-2 text-[11px] text-studio-faint">
-              Deletes the video and every asset. Blocked while the pipeline is actively
-              processing.
-            </p>
-          </section>
+          {isOperator && (
+            <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
+              <h2 className="mb-2.5 text-sm font-semibold text-[#d8cfbf]">Danger zone</h2>
+              <DeleteVideoButton videoId={v.id} videoNo={v.video_no} title={v.title} />
+              <p className="mt-2 text-[11px] text-studio-faint">
+                Deletes the video and every asset. Blocked while the pipeline is actively
+                processing.
+              </p>
+            </section>
+          )}
         </div>
 
         <div className="space-y-4">
-          {cost.lines.length > 0 && (
+          {isOperator && cost.lines.length > 0 && (
             <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
               <h2 className="mb-2.5 flex items-center justify-between text-[13px] font-semibold text-[#d8cfbf]">
                 Cost
@@ -236,6 +290,7 @@ export default async function VideoDetailPage({
             </section>
           )}
 
+          {isOperator && (
           <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
             <h2 className="mb-2.5 text-[13px] font-semibold text-[#d8cfbf]">Jobs</h2>
             <ul className="space-y-[7px] text-xs">
@@ -261,6 +316,7 @@ export default async function VideoDetailPage({
               {(jobs ?? []).length === 0 && <li className="text-studio-faint">No jobs yet</li>}
             </ul>
           </section>
+          )}
 
           {(comments ?? []).length > 0 && (
             <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
