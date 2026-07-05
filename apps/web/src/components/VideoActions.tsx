@@ -97,7 +97,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
             className={
               primaryLink === kind
                 ? 'studio-lift rounded-[8px] bg-studio-accent px-3.5 py-2 text-[12.5px] font-semibold text-studio-on-accent disabled:opacity-50'
-                : 'rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#d8cfbf] hover:bg-studio-inset disabled:opacity-50'
+                : 'rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#d8cfbf] transition-colors hover:bg-[#201d18] hover:text-studio-bright disabled:opacity-50'
             }
           >
             Create {kind} review link
@@ -117,7 +117,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
             <button
               onClick={() => act('regenerate_avatar')}
               disabled={!!busy}
-              className="rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] hover:bg-studio-inset disabled:opacity-50"
+              className="rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] transition-colors hover:bg-[#201d18] hover:text-studio-bright disabled:opacity-50"
             >
               Regenerate avatar
             </button>
@@ -126,7 +126,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
                 key={i}
                 onClick={() => act('regenerate_scene', { scene_index: i })}
                 disabled={!!busy}
-                className="rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] hover:bg-studio-inset disabled:opacity-50"
+                className="rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] transition-colors hover:bg-[#201d18] hover:text-studio-bright disabled:opacity-50"
               >
                 Regen scene {i}
               </button>
@@ -134,7 +134,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
             <button
               onClick={() => act('re_render')}
               disabled={!!busy}
-              className="rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] hover:bg-studio-inset disabled:opacity-50"
+              className="rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] transition-colors hover:bg-[#201d18] hover:text-studio-bright disabled:opacity-50"
             >
               Re-render
             </button>
@@ -189,7 +189,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
               })
             }
             disabled={!!busy}
-            className="rounded-[9px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] hover:bg-studio-inset disabled:opacity-50"
+            className="rounded-[9px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] transition-colors hover:bg-[#201d18] hover:text-studio-bright disabled:opacity-50"
           >
             Save caption & schedule
           </button>

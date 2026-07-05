@@ -71,7 +71,7 @@ export default async function VideoDetailPage({
       <div className="flex flex-wrap items-center gap-3">
         <Link
           href="/"
-          className="rounded-[8px] border border-studio-border-strong px-2.5 py-1.5 text-[13px] text-studio-sub hover:text-studio-bright"
+          className="rounded-[8px] border border-studio-border-strong px-2.5 py-1.5 text-[13px] text-studio-sub transition-colors hover:bg-[#201d18] hover:text-studio-bright"
         >
           ← Pipeline
         </Link>
@@ -80,7 +80,7 @@ export default async function VideoDetailPage({
         <StatusBadge status={v.status} />
         <Link
           href={`/videos/${v.id}/script`}
-          className="ml-auto rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#d8cfbf] hover:bg-studio-inset"
+          className="ml-auto rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#d8cfbf] transition-colors hover:bg-[#201d18] hover:text-studio-bright"
         >
           Open script editor →
         </Link>
@@ -161,11 +161,11 @@ export default async function VideoDetailPage({
                   controls
                   preload="metadata"
                   src={`/api/media/${finalVideo.id}#t=0.1`}
-                  className="aspect-[9/16] w-[150px] rounded-[11px] border border-studio-border bg-black object-cover"
+                  className="aspect-[9/16] w-full max-w-[320px] rounded-[11px] border border-[#3a2f16] bg-black object-cover"
                 />
               ) : (
                 <div
-                  className="flex aspect-[9/16] w-[150px] items-center justify-center rounded-[11px] border border-studio-border text-[26px] text-studio-accent"
+                  className="flex aspect-[9/16] w-full max-w-[320px] items-center justify-center rounded-[11px] border border-[#3a2f16] text-[26px] text-studio-accent"
                   style={{ background: hatch }}
                 >
                   ▶
