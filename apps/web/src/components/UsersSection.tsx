@@ -42,18 +42,28 @@ export function UsersSection({ users }: { users: DashboardUser[] }) {
     router.refresh();
   }
 
+  async function sendLoginLink(user: DashboardUser) {
+    setBusy(true);
+    setError(null);
+    setInvited(null);
+    const res = await fetch(`/api/users/${user.id}/login-link`, { method: 'POST' });
+    setBusy(false);
+    if (!res.ok) return setError(await res.text());
+    setInvited(user.email);
+  }
+
   return (
     <section className="space-y-3 rounded-[14px] border border-studio-border bg-studio-panel p-6">
       <h2 className="text-lg font-semibold text-studio-bright">Users &amp; reviewers</h2>
       <p className="text-xs text-studio-muted">
-        Client reviewers sign in with an emailed code — no password, no per-video links. They see
-        the pipeline read-only and can approve, reject and comment. Operators have full access.
+        Client reviewers sign in through a link you email them from here — no password, no
+        per-video links, and they cannot request access themselves. They see the pipeline
+        read-only and can approve, reject and comment. Operators have full access.
       </p>
       {error && <p className="rounded-[8px] bg-red-950 p-2 text-xs text-red-300">{error}</p>}
       {invited && (
         <p className="rounded-[8px] border border-[#3a2f16] bg-[#2a2310] p-2 text-xs text-studio-accent">
-          Invite sent to {invited}. They can also sign in any time via “Email code” on the login
-          page.
+          Sign-in email sent to {invited}.
         </p>
       )}
 
@@ -99,13 +109,22 @@ export function UsersSection({ users }: { users: DashboardUser[] }) {
                     : 'invite pending'}
               </span>
               {u.role === 'client' && (
-                <button
-                  onClick={() => remove(u)}
-                  disabled={busy}
-                  className="ml-auto text-studio-muted hover:text-red-400"
-                >
-                  remove
-                </button>
+                <span className="ml-auto flex items-center gap-3">
+                  <button
+                    onClick={() => sendLoginLink(u)}
+                    disabled={busy}
+                    className="text-studio-sub hover:text-studio-bright"
+                  >
+                    email login link
+                  </button>
+                  <button
+                    onClick={() => remove(u)}
+                    disabled={busy}
+                    className="text-studio-muted hover:text-red-400"
+                  >
+                    remove
+                  </button>
+                </span>
               )}
             </li>
           ))}

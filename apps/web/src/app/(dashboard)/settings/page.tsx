@@ -63,8 +63,8 @@ export default async function SettingsPage() {
       settings={Object.fromEntries((settings ?? []).map((r) => [r.key, r.value]))}
       defaultScriptPrompt={DEFAULT_SCRIPT_SYSTEM}
       defaultCaptionPrompt={DEFAULT_CAPTION_SYSTEM}
+      usersSection={<UsersSection users={users} />}
     >
-      <UsersSection users={users} />
       <ApiKeysSection apiKeys={(apiKeys ?? []) as ApiKeyRow[]} />
     </SettingsClient>
   );

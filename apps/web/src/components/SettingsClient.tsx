@@ -66,6 +66,7 @@ const NAV: { id: string; label: string }[] = [
   { id: 'caption', label: 'Caption prompt' },
   { id: 'voice', label: 'HeyGen voice' },
   { id: 'social', label: 'Social posting' },
+  { id: 'users', label: 'Users & reviewers' },
   { id: 'api', label: 'API keys' },
 ];
 
@@ -74,12 +75,15 @@ export function SettingsClient({
   settings,
   defaultScriptPrompt,
   defaultCaptionPrompt,
+  usersSection,
   children,
 }: {
   brandAssets: BrandAssetRow[];
   settings: Record<string, unknown>;
   defaultScriptPrompt: string;
   defaultCaptionPrompt: string;
+  /** Users & reviewers section, rendered under its own nav item. */
+  usersSection?: React.ReactNode;
   /** API keys section, rendered inside the switcher as the last nav item. */
   children?: React.ReactNode;
 }) {
@@ -868,6 +872,7 @@ export function SettingsClient({
         )}
       </section>
 
+        <div className={show('users')}>{usersSection}</div>
         <div className={show('api')}>{children}</div>
         </div>
       </div>
