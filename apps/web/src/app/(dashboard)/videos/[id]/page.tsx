@@ -53,21 +53,36 @@ export default async function VideoDetailPage({
   const voiceover = latestByKind('voiceover');
   const avatar = latestByKind('avatar_video');
   const finalVideo = latestByKind('final_video');
-  const scenes = [1, 2, 3]
-    .map((i) => ({ i, asset: latestByKind('scene_clip', i) }))
-    .filter((s) => s.asset);
+  const scenes = [1, 2, 3].map((i) => ({ i, asset: latestByKind('scene_clip', i) }));
+
+  const spokenWords = script
+    ? (script.full_voiceover_text ||
+        [script.hook, ...script.scenes.map((s) => s.voiceover), script.cta].join(' '))
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length
+    : 0;
+
+  const hatch =
+    'repeating-linear-gradient(135deg,#221d14,#221d14 6px,#1a160f 6px,#1a160f 12px)';
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
+        <Link
+          href="/"
+          className="rounded-[8px] border border-studio-border-strong px-2.5 py-1.5 text-[13px] text-studio-sub hover:text-studio-bright"
+        >
+          ← Pipeline
+        </Link>
         {v.video_no && <VideoNumberBadge videoId={v.id} videoNo={v.video_no} />}
-        <h1 className="text-xl font-semibold">{v.title}</h1>
+        <h1 className="text-[19px] font-semibold text-studio-bright">{v.title}</h1>
         <StatusBadge status={v.status} />
         <Link
           href={`/videos/${v.id}/script`}
-          className="studio-lift ml-auto rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset"
+          className="ml-auto rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#d8cfbf] hover:bg-studio-inset"
         >
-          Open script editor
+          Open script editor →
         </Link>
       </div>
 
@@ -77,13 +92,18 @@ export default async function VideoDetailPage({
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <div className="grid items-start gap-[22px] lg:grid-cols-[1.9fr_1fr]">
+        <div className="min-w-0 space-y-[18px]">
           {script && (
             <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
-              <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">
-                Script v{script.version}
-              </h2>
+              <div className="mb-3.5 flex flex-wrap items-center gap-2.5">
+                <h2 className="text-sm font-semibold text-studio-bright">
+                  Script v{script.version}
+                </h2>
+                <span className="text-xs text-studio-muted">
+                  · v{script.version} ({script.created_by}) · {spokenWords} words spoken
+                </span>
+              </div>
               <ScriptView
                 hook={script.hook}
                 cta={script.cta}
@@ -94,53 +114,62 @@ export default async function VideoDetailPage({
           )}
 
           <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
-            <h2 className="mb-3 text-sm font-semibold text-[#d8cfbf]">Generated assets</h2>
-            <div className="space-y-4">
-              {voiceover && (
-                <div>
-                  <p className="mb-1 text-xs text-studio-sub">Voiceover</p>
+            <h2 className="mb-3.5 text-sm font-semibold text-[#d8cfbf]">Generated assets</h2>
+            <div className="mb-3.5">
+              <p className="mb-1.5 text-[11px] text-studio-muted">
+                Voiceover · HeyGen TTS
+                {voiceover?.duration_s ? ` · ${Math.round(voiceover.duration_s)}s` : ''}
+              </p>
+              {voiceover ? (
+                <div className="rounded-[9px] border border-studio-border bg-studio-card p-2">
                   <audio controls preload="metadata" src={`/api/media/${voiceover.id}`} className="w-full" />
                 </div>
-              )}
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                {avatar && (
-                  <div>
-                    <p className="mb-1 text-xs text-studio-sub">Avatar</p>
-                    <video
-                      controls
-                      preload="metadata"
-                      src={`/api/media/${avatar.id}#t=0.1`}
-                      className="w-full rounded"
-                    />
-                  </div>
-                )}
-                {scenes.map(({ i, asset }) => (
-                  <div key={i}>
-                    <p className="mb-1 text-xs text-studio-sub">Scene {i}</p>
-                    <video
-                      controls
-                      preload="metadata"
-                      src={`/api/media/${asset!.id}#t=0.1`}
-                      className="w-full rounded"
-                    />
-                  </div>
-                ))}
-              </div>
-              {finalVideo && (
-                <div>
-                  <p className="mb-1 text-xs text-studio-sub">Final video</p>
-                  <video
-                    controls
-                    preload="metadata"
-                    src={`/api/media/${finalVideo.id}#t=0.1`}
-                    className="mx-auto max-h-[480px] rounded"
-                  />
+              ) : (
+                <div className="rounded-[9px] border border-studio-border bg-studio-card px-3 py-2.5 text-xs text-studio-faint">
+                  Not generated yet
                 </div>
               )}
-              {!voiceover && !avatar && scenes.length === 0 && !finalVideo && (
-                <p className="text-sm text-studio-muted">
-                  Nothing generated yet — assets appear here as the pipeline runs.
-                </p>
+            </div>
+            <div className="mb-3.5 grid grid-cols-2 gap-2.5 md:grid-cols-4">
+              {[{ label: 'Avatar', asset: avatar }, ...scenes.map(({ i, asset }) => ({ label: `Scene ${i}`, asset }))].map(
+                ({ label, asset }) => (
+                  <div key={label}>
+                    <p className="mb-1.5 text-[11px] text-studio-muted">{label}</p>
+                    {asset ? (
+                      <video
+                        controls
+                        preload="metadata"
+                        src={`/api/media/${asset.id}#t=0.1`}
+                        className="aspect-[9/16] w-full rounded-[9px] border border-studio-border bg-black object-cover"
+                      />
+                    ) : (
+                      <div
+                        className="flex aspect-[9/16] w-full items-center justify-center rounded-[9px] border border-studio-border text-base text-studio-accent"
+                        style={{ background: hatch }}
+                      >
+                        ▶
+                      </div>
+                    )}
+                  </div>
+                ),
+              )}
+            </div>
+            <div>
+              <p className="mb-1.5 text-[11px] text-studio-muted">Final video · 1080×1920 render</p>
+              {finalVideo ? (
+                <video
+                  controls
+                  preload="metadata"
+                  src={`/api/media/${finalVideo.id}#t=0.1`}
+                  className="aspect-[9/16] w-[150px] rounded-[11px] border border-studio-border bg-black object-cover"
+                />
+              ) : (
+                <div
+                  className="flex aspect-[9/16] w-[150px] items-center justify-center rounded-[11px] border border-studio-border text-[26px] text-studio-accent"
+                  style={{ background: hatch }}
+                >
+                  ▶
+                </div>
               )}
             </div>
           </section>
@@ -157,21 +186,25 @@ export default async function VideoDetailPage({
           />
 
           <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
-            <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Danger zone</h2>
+            <h2 className="mb-2.5 text-sm font-semibold text-[#d8cfbf]">Danger zone</h2>
             <DeleteVideoButton videoId={v.id} videoNo={v.video_no} title={v.title} />
+            <p className="mt-2 text-[11px] text-studio-faint">
+              Deletes the video and every asset. Blocked while the pipeline is actively
+              processing.
+            </p>
           </section>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {cost.lines.length > 0 && (
             <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
-              <h2 className="mb-2 flex items-center justify-between text-sm font-semibold text-[#d8cfbf]">
+              <h2 className="mb-2.5 flex items-center justify-between text-[13px] font-semibold text-[#d8cfbf]">
                 Cost
-                <span className="font-mono text-studio-accent">
+                <span className="font-mono text-sm font-normal text-studio-accent">
                   {formatUsd(cost.totalUsd, cost.approx)}
                 </span>
               </h2>
-              <ul className="space-y-1 text-xs">
+              <ul className="space-y-[7px] text-xs">
                 {cost.lines.map((l, idx) => (
                   <li key={idx} className="flex justify-between gap-2 text-studio-sub">
                     <span>{l.label}</span>
@@ -187,11 +220,11 @@ export default async function VideoDetailPage({
           )}
 
           <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
-            <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Jobs</h2>
-            <ul className="space-y-1 text-xs">
+            <h2 className="mb-2.5 text-[13px] font-semibold text-[#d8cfbf]">Jobs</h2>
+            <ul className="space-y-[7px] text-xs">
               {(jobs ?? []).map((j) => (
                 <li key={j.id} className="flex justify-between gap-2">
-                  <span>
+                  <span className="font-mono text-studio-sub">
                     {j.type}
                     {j.payload?.scene_index ? ` #${j.payload.scene_index}` : ''}
                   </span>
@@ -214,40 +247,86 @@ export default async function VideoDetailPage({
 
           {(comments ?? []).length > 0 && (
             <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
-              <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Reviewer comments</h2>
-              <ul className="space-y-2 text-xs">
+              <h2 className="mb-2.5 text-[13px] font-semibold text-[#d8cfbf]">
+                Reviewer comments
+              </h2>
+              <ul className="space-y-[9px] text-xs">
                 {(comments ?? []).map((c) => (
-                  <li key={c.id} className="rounded-[9px] bg-studio-card px-3 py-2">
-                    <span className="text-studio-accent">[{c.section_key}]</span>{' '}
-                    <b>{c.author_name}:</b> {c.body}
+                  <li key={c.id} className="rounded-[9px] bg-studio-card px-3 py-2 leading-relaxed">
+                    <span className="font-mono text-[11px] text-studio-accent">
+                      [{c.section_key}]
+                    </span>{' '}
+                    <b className="text-[#d8cfbf]">{c.author_name}:</b>{' '}
+                    <span className="text-[#cfc7b8]">{c.body}</span>
                   </li>
                 ))}
               </ul>
             </section>
           )}
 
-          {(approvals ?? []).length > 0 && (
+          {((approvals ?? []).length > 0 ||
+            v.status === 'script_review' ||
+            v.status === 'video_review') && (
             <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
-              <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Approvals</h2>
-              <ul className="space-y-1 text-xs">
+              <h2 className="mb-2.5 text-[13px] font-semibold text-[#d8cfbf]">Approvals</h2>
+              <ul className="space-y-2 text-xs">
                 {(approvals ?? []).map((a) => (
-                  <li key={a.id}>
-                    {a.kind} — <b>{a.decision}</b> by {a.reviewer_name} (
-                    {new Date(a.created_at).toLocaleString()})
+                  <li
+                    key={a.id}
+                    className="flex items-center gap-2"
+                    title={new Date(a.created_at).toLocaleString()}
+                  >
+                    <span
+                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] ${
+                        a.decision === 'approved'
+                          ? 'bg-[#63d2a4] text-[#06251a]'
+                          : 'bg-[#f0846a] text-[#2a120c]'
+                      }`}
+                    >
+                      {a.decision === 'approved' ? '✓' : '✗'}
+                    </span>
+                    <span className="text-[#cfc7b8]">
+                      {a.kind} — <b className="text-studio-text">{a.decision}</b> by{' '}
+                      {a.reviewer_name}
+                    </span>
                   </li>
                 ))}
+                {(v.status === 'script_review' || v.status === 'video_review') && (
+                  <li className="flex items-center gap-2">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-studio-accent text-[10px] text-studio-on-accent">
+                      ◷
+                    </span>
+                    <span className="text-[#cfc7b8]">
+                      {v.status === 'script_review' ? 'script' : 'video'} — awaiting decision
+                    </span>
+                  </li>
+                )}
               </ul>
             </section>
           )}
 
           <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
-            <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Timeline</h2>
-            <ul className="space-y-1 text-xs text-studio-sub">
+            <h2 className="mb-2.5 text-[13px] font-semibold text-[#d8cfbf]">Timeline</h2>
+            <ul className="space-y-[9px] text-xs text-studio-sub">
               {(events ?? []).map((e) => (
-                <li key={e.id}>
-                  {new Date(e.created_at).toLocaleString()} — {e.event}
+                <li
+                  key={e.id}
+                  className="flex gap-2.5"
+                  title={new Date(e.created_at).toLocaleString()}
+                >
+                  <span className="whitespace-nowrap font-mono text-[#6f6a60]">
+                    {new Date(e.created_at).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false,
+                    })}
+                  </span>
+                  <span>{String(e.event).replaceAll('_', ' ')}</span>
                 </li>
               ))}
+              {(events ?? []).length === 0 && (
+                <li className="text-studio-faint">No events yet</li>
+              )}
             </ul>
           </section>
         </div>

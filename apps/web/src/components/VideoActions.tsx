@@ -60,6 +60,21 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
 
   const activeLinks = links.filter((l) => !l.revoked && new Date(l.expires_at) > new Date());
 
+  // Presentational: which review link is the natural next step for this status.
+  const videoPhase = [
+    'rendering',
+    'video_review',
+    'video_changes_requested',
+    'scheduled',
+    'posting',
+    'posted',
+  ].includes(video.status);
+  const linkOrder: Array<'script' | 'video'> = videoPhase
+    ? ['video', 'script']
+    : ['script', 'video'];
+  const primaryLink =
+    videoPhase || video.status === 'script_review' ? linkOrder[0] : null;
+
   return (
     <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
       <h2 className="mb-3 text-sm font-semibold text-[#d8cfbf]">Actions</h2>
@@ -69,30 +84,30 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
           <button
             onClick={() => act('send_for_review')}
             disabled={!!busy}
-            className="studio-lift rounded-[9px] bg-studio-accent px-3 py-1.5 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
+            className="studio-lift rounded-[8px] bg-studio-accent px-3.5 py-2 text-[12.5px] font-semibold text-studio-on-accent disabled:opacity-50"
           >
             Send script for review
           </button>
         )}
-        <button
-          onClick={() => createLink('script')}
-          disabled={!!busy}
-          className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
-        >
-          Create script review link
-        </button>
-        <button
-          onClick={() => createLink('video')}
-          disabled={!!busy}
-          className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
-        >
-          Create video review link
-        </button>
+        {linkOrder.map((kind) => (
+          <button
+            key={kind}
+            onClick={() => createLink(kind)}
+            disabled={!!busy}
+            className={
+              primaryLink === kind
+                ? 'studio-lift rounded-[8px] bg-studio-accent px-3.5 py-2 text-[12.5px] font-semibold text-studio-on-accent disabled:opacity-50'
+                : 'rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#d8cfbf] hover:bg-studio-inset disabled:opacity-50'
+            }
+          >
+            Create {kind} review link
+          </button>
+        ))}
         {video.status === 'failed' && (
           <button
             onClick={() => act('retry_failed')}
             disabled={!!busy}
-            className="studio-lift rounded-[9px] bg-red-800 px-3 py-1.5 text-sm font-semibold hover:bg-red-700 disabled:opacity-50"
+            className="studio-lift rounded-[8px] bg-red-800 px-3.5 py-2 text-[12.5px] font-semibold hover:bg-red-700 disabled:opacity-50"
           >
             Retry failed jobs
           </button>
@@ -102,7 +117,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
             <button
               onClick={() => act('regenerate_avatar')}
               disabled={!!busy}
-              className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
+              className="rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] hover:bg-studio-inset disabled:opacity-50"
             >
               Regenerate avatar
             </button>
@@ -111,7 +126,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
                 key={i}
                 onClick={() => act('regenerate_scene', { scene_index: i })}
                 disabled={!!busy}
-                className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
+                className="rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] hover:bg-studio-inset disabled:opacity-50"
               >
                 Regen scene {i}
               </button>
@@ -119,13 +134,18 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
             <button
               onClick={() => act('re_render')}
               disabled={!!busy}
-              className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
+              className="rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] hover:bg-studio-inset disabled:opacity-50"
             >
               Re-render
             </button>
           </>
         )}
       </div>
+
+      <p className="mt-3 text-[11px] leading-normal text-studio-muted">
+        Approval happens through a review link — creating one copies it to your clipboard.
+        Regen scenes/avatar and Re-render are available while the video is in review.
+      </p>
 
       {newLink && (
         <p className="mt-3 break-all rounded-[8px] bg-studio-code p-2 text-xs text-emerald-300">
@@ -140,23 +160,27 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
         </div>
       )}
 
-      <div className="mt-4 space-y-2 border-t border-studio-border pt-4">
-        <label className="block text-xs text-studio-sub">Post caption</label>
+      <div className="mt-4 border-t border-[#201d18] pt-4">
+        <label className="mb-[7px] block text-xs text-studio-muted">
+          Post caption <span className="text-studio-faint">— written by Claude after approval; override here</span>
+        </label>
         <textarea
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
           rows={4}
           placeholder="Generated automatically after video approval — you can override it here."
-          className="w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
+          className="w-full rounded-[10px] border border-studio-border-strong bg-studio-inset px-3 py-2.5 text-[13px] leading-normal"
         />
-        <label className="block text-xs text-studio-sub">Schedule time (defaults to 7 PM MYT next day)</label>
-        <input
-          type="datetime-local"
-          value={scheduleAt}
-          onChange={(e) => setScheduleAt(e.target.value)}
-          className="rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
-        />
-        <div>
+        <label className="mb-[7px] mt-3.5 block text-xs text-studio-muted">
+          Schedule time <span className="text-studio-faint">— defaults to 7 PM MYT next day</span>
+        </label>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <input
+            type="datetime-local"
+            value={scheduleAt}
+            onChange={(e) => setScheduleAt(e.target.value)}
+            className="rounded-[9px] border border-studio-border-strong bg-studio-inset px-3 py-2 font-mono text-[13px] text-[#d8cfbf]"
+          />
           <button
             onClick={() =>
               act('update_meta', {
@@ -165,7 +189,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
               })
             }
             disabled={!!busy}
-            className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
+            className="rounded-[9px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] hover:bg-studio-inset disabled:opacity-50"
           >
             Save caption & schedule
           </button>

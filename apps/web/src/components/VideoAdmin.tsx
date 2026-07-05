@@ -39,7 +39,7 @@ export function VideoNumberBadge({ videoId, videoNo }: { videoId: string; videoN
       onClick={edit}
       disabled={busy}
       title="Click to reassign the video number"
-      className="rounded-[5px] bg-studio-inset px-2 py-0.5 font-mono text-sm text-studio-accent hover:bg-studio-border disabled:opacity-50"
+      className="studio-lift rounded-[5px] bg-studio-accent px-2 py-0.5 font-mono text-xs text-studio-on-accent disabled:opacity-50"
     >
       {busy ? '…' : `V${videoNo}`}
     </button>
@@ -81,9 +81,9 @@ export function DeleteVideoButton({
       <button
         onClick={remove}
         disabled={busy}
-        className="rounded-[9px] border border-red-900 px-3 py-1.5 text-sm text-red-400 hover:bg-red-950 disabled:opacity-50"
+        className="rounded-[8px] border border-[#4a2018] px-3.5 py-2 text-[12.5px] text-[#f0846a] hover:bg-[#1c110d] disabled:opacity-50"
       >
-        {busy ? 'Deleting…' : 'Delete video'}
+        {busy ? 'Deleting…' : `Delete V${videoNo} · ${title}`}
       </button>
       {error && <p className="text-xs text-red-400">{error}</p>}
     </div>
