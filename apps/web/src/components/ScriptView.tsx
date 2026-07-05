@@ -19,19 +19,21 @@ export function ScriptView({
   scenes: ScriptScene[];
   videoNo?: number | null;
 }) {
+  const box = 'rounded-[11px] border border-studio-border-strong bg-studio-card px-4 py-3';
+
   if (isNarratorScript(scenes)) {
     const passage = [hook, cta].map((t) => t.trim()).filter(Boolean).join(' ');
     return (
-      <div className="space-y-3 text-sm">
-        <div>
-          <p className="studio-eyebrow mb-1">
+      <div className="space-y-2.5 text-sm">
+        <div className={box}>
+          <p className="studio-eyebrow mb-1.5">
             Voiceover
           </p>
-          <p className="leading-relaxed">{passage}</p>
+          <p className="leading-relaxed text-[#e6ddca]">{passage}</p>
         </div>
         {scenes.map((s) => (
-          <div key={s.index}>
-            <p className="studio-eyebrow mb-1">
+          <div key={s.index} className={box}>
+            <p className="studio-eyebrow mb-1.5">
               {sceneCode(videoNo, s.index)} — B-roll
             </p>
             <p className="leading-relaxed text-studio-sub">{s.broll_prompt}</p>
@@ -42,23 +44,34 @@ export function ScriptView({
   }
 
   return (
-    <div className="space-y-2 text-sm">
-      <p>
-        <b className="text-studio-accent">Hook:</b> {hook}
-      </p>
+    <div className="space-y-2.5 text-sm">
+      <div className={box}>
+        <p className="studio-eyebrow mb-1.5">Hook</p>
+        <p className="leading-relaxed text-[#e6ddca]">{hook}</p>
+      </div>
       {scenes.map((s) => (
-        <div key={s.index}>
-          <p>
-            <b className="text-studio-accent">{sceneCode(videoNo, s.index)}:</b> {s.voiceover}
-          </p>
+        <div key={s.index} className={box}>
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <p className="studio-eyebrow">{sceneCode(videoNo, s.index)} · voiceover</p>
+            {s.model_path && (
+              <span className="font-mono text-[10px] text-studio-muted">
+                {s.model_path
+                  .split('/')
+                  .filter((p) => p !== 'text-to-video' && p !== 'image-to-video')
+                  .at(-1)}
+              </span>
+            )}
+          </div>
+          <p className="leading-relaxed text-[#e6ddca]">{s.voiceover}</p>
           {s.broll_prompt && (
-            <p className="mt-0.5 text-xs text-studio-muted">B-roll: {s.broll_prompt}</p>
+            <p className="mt-2 text-xs text-studio-muted">B-roll: {s.broll_prompt}</p>
           )}
         </div>
       ))}
-      <p>
-        <b className="text-studio-accent">CTA:</b> {cta}
-      </p>
+      <div className={box}>
+        <p className="studio-eyebrow mb-1.5">Call to action</p>
+        <p className="leading-relaxed text-[#e6ddca]">{cta}</p>
+      </div>
     </div>
   );
 }

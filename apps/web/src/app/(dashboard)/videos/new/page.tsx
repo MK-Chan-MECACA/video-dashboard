@@ -15,9 +15,9 @@ export default async function NewVideoPage() {
   const fields = resolveDirectionFields(setting?.value);
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-[720px]">
       <div className="studio-eyebrow mb-2">New video</div>
-      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-studio-bright">New Video</h1>
+      <h1 className="mb-6 text-[26px] font-semibold tracking-tight text-studio-bright">New Video</h1>
       <AiScriptGenerator fields={fields} />
       <div className="my-6 flex items-center gap-3 text-xs text-studio-faint">
         <div className="h-px flex-1 bg-studio-border" />

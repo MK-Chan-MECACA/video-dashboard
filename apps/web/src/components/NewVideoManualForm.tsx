@@ -28,7 +28,7 @@ export default function NewVideoManualForm() {
   }
 
   return (
-    <div className="space-y-4 rounded-[16px] border border-studio bg-studio-card p-6">
+    <div className="space-y-4 rounded-[16px] border border-studio bg-studio-panel p-6">
       <div>
         <label className="mb-1 block text-sm text-studio-sub">Working title</label>
         <input

@@ -88,7 +88,7 @@ export default function AiScriptGenerator({ fields }: { fields: DirectionField[]
   const finished = items.length > 0 && !running;
 
   return (
-    <div className="space-y-4 rounded-[16px] border border-studio bg-studio-card p-6">
+    <div className="space-y-4 rounded-[16px] border border-studio bg-studio-panel p-6">
       <div>
         <h2 className="text-[15px] font-semibold text-studio-accent">AI Script Generator</h2>
         <p className="mt-1 text-sm text-studio-sub">
@@ -156,7 +156,7 @@ export default function AiScriptGenerator({ fields }: { fields: DirectionField[]
         </div>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex items-center gap-3">
         <button
           disabled={running}
           onClick={generate}
@@ -174,6 +174,7 @@ export default function AiScriptGenerator({ fields }: { fields: DirectionField[]
             Stop after current
           </button>
         )}
+        <span className="ml-auto font-mono text-xs text-studio-muted">≈ $0.02 / script</span>
       </div>
 
       {items.length > 0 && (
@@ -187,12 +188,15 @@ export default function AiScriptGenerator({ fields }: { fields: DirectionField[]
                 </span>
               )}
               {it.state === 'done' && (
-                <Link
-                  href={`/videos/${it.id}/script`}
-                  className="text-studio-accent hover:underline"
-                >
-                  V{it.videoNo} {it.title}
-                </Link>
+                <>
+                  <span className="text-studio-accent">✦</span>
+                  <Link
+                    href={`/videos/${it.id}/script`}
+                    className="text-studio-accent hover:underline"
+                  >
+                    V{it.videoNo} {it.title}
+                  </Link>
+                </>
               )}
               {it.state === 'error' && (
                 <span className="text-red-400">Failed: {it.error}</span>

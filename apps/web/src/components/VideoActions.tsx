@@ -61,8 +61,8 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
   const activeLinks = links.filter((l) => !l.revoked && new Date(l.expires_at) > new Date());
 
   return (
-    <section className="rounded-[12px] border border-studio bg-studio-card p-4">
-      <h2 className="mb-3 text-sm font-semibold text-studio-sub">Actions</h2>
+    <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+      <h2 className="mb-3 text-sm font-semibold text-[#d8cfbf]">Actions</h2>
 
       <div className="flex flex-wrap gap-2">
         {(video.status === 'draft' || video.status === 'script_changes_requested') && (

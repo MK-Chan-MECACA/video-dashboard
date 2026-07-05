@@ -42,10 +42,17 @@ const TOOLS: { name: string; readOnly: boolean; desc: string }[] = [
   { name: 'update_settings', readOnly: false, desc: 'Upsert settings key/values' },
 ];
 
+/** The three access paths shown as "ways in" cards (matches the live routes). */
+const WAYS_IN: { n: string; name: string; path: string }[] = [
+  { n: '01', name: 'REST API', path: '/api/v1/*' },
+  { n: '02', name: 'Remote MCP', path: '/api/mcp' },
+  { n: '03', name: 'Local stdio MCP', path: 'ttm-video-mcp' },
+];
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3 rounded-[12px] border border-studio bg-studio-card p-5">
-      <h2 className="text-sm font-semibold text-studio-sub">{title}</h2>
+    <section className="space-y-3">
+      <h2 className="text-base font-semibold text-studio-bright">{title}</h2>
       {children}
     </section>
   );
@@ -54,19 +61,29 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function DocsPage() {
   const base = appUrl();
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-[900px] space-y-7">
       <div>
         <div className="studio-eyebrow mb-2">Developer</div>
-        <h1 className="text-2xl font-semibold tracking-tight text-studio-bright">API &amp; MCP</h1>
-        <p className="mt-1.5 text-sm text-studio-sub">
+        <h1 className="text-[28px] font-semibold tracking-tight text-studio-bright">API &amp; MCP</h1>
+        <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-studio-sub">
           Connect third-party tools and AI agents to the video pipeline. Everything the dashboard
           can do — create videos, write and approve scripts, trigger renders, download finished
           videos — is available programmatically.
         </p>
       </div>
 
+      <div className="flex flex-col gap-3 sm:flex-row">
+        {WAYS_IN.map((w) => (
+          <div key={w.n} className="flex-1 rounded-[12px] border border-studio bg-studio-card px-4 py-3.5">
+            <div className="font-mono text-[11px] text-studio-accent">{w.n}</div>
+            <div className="mt-1.5 text-[13.5px] font-semibold text-studio-text">{w.name}</div>
+            <div className="mt-0.5 font-mono text-xs text-studio-muted">{w.path}</div>
+          </div>
+        ))}
+      </div>
+
       <Section title="1 · Get an API key">
-        <p className="text-xs text-studio-muted">
+        <p className="text-[13px] leading-relaxed text-studio-sub">
           Create a key in{' '}
           <Link href="/settings" className="text-studio-accent hover:underline">
             Settings → API keys
@@ -79,7 +96,7 @@ export default function DocsPage() {
       </Section>
 
       <Section title="2 · REST API">
-        <p className="text-xs text-studio-muted">
+        <p className="text-[13px] leading-relaxed text-studio-sub">
           Base URL: <code className="text-studio-text">{base}/api/v1</code> — errors come back as
           JSON <code>{'{ "error": "message" }'}</code> with a meaningful HTTP status.
         </p>
@@ -97,41 +114,39 @@ export default function DocsPage() {
 
 curl -H "Authorization: Bearer $KEY" ${base}/api/v1/videos/$ID`}
         />
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-studio font-mono text-[10px] uppercase tracking-wide text-studio-muted">
-                <th className="py-1.5 pr-3 font-medium">Method</th>
-                <th className="py-1.5 pr-3 font-medium">Path</th>
-                <th className="py-1.5 pr-3 font-medium">Scope</th>
-                <th className="py-1.5 font-medium">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ENDPOINTS.map((e) => (
-                <tr key={`${e.method} ${e.path}`} className="border-b border-studio/60 align-top">
-                  <td
-                    className={`py-1.5 pr-3 font-mono ${
-                      e.method === 'GET'
-                        ? 'text-emerald-400'
-                        : e.method === 'DELETE'
-                          ? 'text-red-400'
-                          : 'text-studio-accent'
-                    }`}
-                  >
-                    {e.method}
-                  </td>
-                  <td className="whitespace-nowrap py-1.5 pr-3 font-mono text-studio-text">{e.path}</td>
-                  <td className="py-1.5 pr-3">
-                    <span className={e.scope === 'write' ? 'text-orange-400' : 'text-emerald-400'}>
-                      {e.scope}
-                    </span>
-                  </td>
-                  <td className="py-1.5 text-studio-sub">{e.desc}</td>
+        <div className="overflow-hidden rounded-[12px] border border-[#201d18]">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="bg-studio-card font-mono text-[10px] uppercase tracking-wide text-studio-faint">
+                  <th className="py-2.5 pl-3.5 pr-3 font-medium">Method</th>
+                  <th className="py-2.5 pr-3 font-medium">Path</th>
+                  <th className="py-2.5 pr-3 font-medium">Scope</th>
+                  <th className="py-2.5 pr-3.5 font-medium">Description</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {ENDPOINTS.map((e) => (
+                  <tr key={`${e.method} ${e.path}`} className="border-t border-[#1a1712] align-top">
+                    <td
+                      className={`py-2 pl-3.5 pr-3 font-mono ${
+                        e.method === 'GET'
+                          ? 'text-emerald-400'
+                          : e.method === 'DELETE'
+                            ? 'text-red-400'
+                            : 'text-studio-accent'
+                      }`}
+                    >
+                      {e.method}
+                    </td>
+                    <td className="whitespace-nowrap py-2 pr-3 font-mono text-[#d8cfbf]">{e.path}</td>
+                    <td className="py-2 pr-3 text-studio-muted">{e.scope}</td>
+                    <td className="py-2 pr-3.5 leading-relaxed text-studio-muted">{e.desc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
         <p className="text-xs text-studio-faint">
           Asset download URLs are presigned and expire after 1 hour — re-fetch them, never store
@@ -140,7 +155,7 @@ curl -H "Authorization: Bearer $KEY" ${base}/api/v1/videos/$ID`}
       </Section>
 
       <Section title="3 · MCP for AI agents (remote)">
-        <p className="text-xs text-studio-muted">
+        <p className="text-[13px] leading-relaxed text-studio-sub">
           The dashboard serves a Streamable HTTP MCP server at{' '}
           <code className="text-studio-text">{base}/api/mcp</code>, authenticated with the same API
           keys. It exposes 14 tools (below) that run the same code as the REST API.
@@ -159,7 +174,7 @@ curl -H "Authorization: Bearer $KEY" ${base}/api/v1/videos/$ID`}
       </Section>
 
       <Section title="4 · MCP local (stdio)">
-        <p className="text-xs text-studio-muted">
+        <p className="text-[13px] leading-relaxed text-studio-sub">
           The <code>ttm-video-mcp</code> package (in <code>packages/mcp-stdio</code>) runs locally
           and proxies this dashboard&apos;s REST API. Build once with{' '}
           <code>pnpm --filter ttm-video-mcp build</code>, then add to any MCP client:
@@ -189,29 +204,22 @@ curl -H "Authorization: Bearer $KEY" ${base}/api/v1/videos/$ID`}
       </Section>
 
       <Section title="5 · MCP tools">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-studio font-mono text-[10px] uppercase tracking-wide text-studio-muted">
-                <th className="py-1.5 pr-3 font-medium">Tool</th>
-                <th className="py-1.5 pr-3 font-medium">Access</th>
-                <th className="py-1.5 font-medium">Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {TOOLS.map((t) => (
-                <tr key={t.name} className="border-b border-studio/60 align-top">
-                  <td className="whitespace-nowrap py-1.5 pr-3 font-mono text-studio-text">{t.name}</td>
-                  <td className="py-1.5 pr-3">
-                    <span className={t.readOnly ? 'text-emerald-400' : 'text-orange-400'}>
-                      {t.readOnly ? 'read' : 'write'}
-                    </span>
-                  </td>
-                  <td className="py-1.5 text-studio-sub">{t.desc}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {TOOLS.map((t) => (
+            <div key={t.name} className="rounded-[9px] border border-[#201d18] bg-studio-card px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-[#d8cfbf]">{t.name}</span>
+                <span
+                  className={`ml-auto text-[9.5px] uppercase tracking-wide ${
+                    t.readOnly ? 'text-emerald-400' : 'text-studio-accent'
+                  }`}
+                >
+                  {t.readOnly ? 'read' : 'write'}
+                </span>
+              </div>
+              <p className="mt-1 text-[11px] leading-relaxed text-studio-muted">{t.desc}</p>
+            </div>
+          ))}
         </div>
         <p className="text-xs text-studio-faint">Read-only keys can only call the read tools.</p>
       </Section>

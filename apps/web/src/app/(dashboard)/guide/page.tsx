@@ -62,9 +62,9 @@ const LI = 'text-xs leading-relaxed text-studio-sub';
 
 export default function GuidePage() {
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-[820px] space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-studio-bright">How to use this dashboard</h1>
+        <h1 className="text-[28px] font-semibold tracking-tight text-studio-bright">How to use this dashboard</h1>
         <p className="mt-1.5 text-sm text-studio-sub">
           From idea to posted TikTok: you create the video and polish the script, a reviewer
           approves via magic link, the pipeline generates voiceover, avatar, B-roll and the final

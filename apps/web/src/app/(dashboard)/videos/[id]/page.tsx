@@ -80,8 +80,8 @@ export default async function VideoDetailPage({
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           {script && (
-            <section className="rounded-[12px] border border-studio bg-studio-card p-4">
-              <h2 className="mb-2 text-sm font-semibold text-studio-sub">
+            <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+              <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">
                 Script v{script.version}
               </h2>
               <ScriptView
@@ -93,8 +93,8 @@ export default async function VideoDetailPage({
             </section>
           )}
 
-          <section className="rounded-[12px] border border-studio bg-studio-card p-4">
-            <h2 className="mb-3 text-sm font-semibold text-studio-sub">Generated assets</h2>
+          <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+            <h2 className="mb-3 text-sm font-semibold text-[#d8cfbf]">Generated assets</h2>
             <div className="space-y-4">
               {voiceover && (
                 <div>
@@ -156,16 +156,16 @@ export default async function VideoDetailPage({
             }))}
           />
 
-          <section className="rounded-[12px] border border-studio bg-studio-card p-4">
-            <h2 className="mb-2 text-sm font-semibold text-studio-sub">Danger zone</h2>
+          <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+            <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Danger zone</h2>
             <DeleteVideoButton videoId={v.id} videoNo={v.video_no} title={v.title} />
           </section>
         </div>
 
         <div className="space-y-6">
           {cost.lines.length > 0 && (
-            <section className="rounded-[12px] border border-studio bg-studio-card p-4">
-              <h2 className="mb-2 flex items-center justify-between text-sm font-semibold text-studio-sub">
+            <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+              <h2 className="mb-2 flex items-center justify-between text-sm font-semibold text-[#d8cfbf]">
                 Cost
                 <span className="font-mono text-studio-accent">
                   {formatUsd(cost.totalUsd, cost.approx)}
@@ -186,8 +186,8 @@ export default async function VideoDetailPage({
             </section>
           )}
 
-          <section className="rounded-[12px] border border-studio bg-studio-card p-4">
-            <h2 className="mb-2 text-sm font-semibold text-studio-sub">Jobs</h2>
+          <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+            <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Jobs</h2>
             <ul className="space-y-1 text-xs">
               {(jobs ?? []).map((j) => (
                 <li key={j.id} className="flex justify-between gap-2">
@@ -213,11 +213,11 @@ export default async function VideoDetailPage({
           </section>
 
           {(comments ?? []).length > 0 && (
-            <section className="rounded-[12px] border border-studio bg-studio-card p-4">
-              <h2 className="mb-2 text-sm font-semibold text-studio-sub">Reviewer comments</h2>
+            <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+              <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Reviewer comments</h2>
               <ul className="space-y-2 text-xs">
                 {(comments ?? []).map((c) => (
-                  <li key={c.id} className="rounded-[8px] bg-studio-code p-2">
+                  <li key={c.id} className="rounded-[9px] bg-studio-card px-3 py-2">
                     <span className="text-studio-accent">[{c.section_key}]</span>{' '}
                     <b>{c.author_name}:</b> {c.body}
                   </li>
@@ -227,8 +227,8 @@ export default async function VideoDetailPage({
           )}
 
           {(approvals ?? []).length > 0 && (
-            <section className="rounded-[12px] border border-studio bg-studio-card p-4">
-              <h2 className="mb-2 text-sm font-semibold text-studio-sub">Approvals</h2>
+            <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+              <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Approvals</h2>
               <ul className="space-y-1 text-xs">
                 {(approvals ?? []).map((a) => (
                   <li key={a.id}>
@@ -240,8 +240,8 @@ export default async function VideoDetailPage({
             </section>
           )}
 
-          <section className="rounded-[12px] border border-studio bg-studio-card p-4">
-            <h2 className="mb-2 text-sm font-semibold text-studio-sub">Timeline</h2>
+          <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+            <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Timeline</h2>
             <ul className="space-y-1 text-xs text-studio-sub">
               {(events ?? []).map((e) => (
                 <li key={e.id}>
