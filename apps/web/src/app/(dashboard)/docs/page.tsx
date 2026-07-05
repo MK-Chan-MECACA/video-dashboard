@@ -74,7 +74,7 @@ export default function DocsPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row">
         {WAYS_IN.map((w) => (
-          <div key={w.n} className="flex-1 rounded-[12px] border border-studio bg-studio-card px-4 py-3.5">
+          <div key={w.n} className="flex-1 rounded-[12px] border border-studio-border bg-studio-card px-4 py-3.5">
             <div className="font-mono text-[11px] text-studio-accent">{w.n}</div>
             <div className="mt-1.5 text-[13.5px] font-semibold text-studio-text">{w.name}</div>
             <div className="mt-0.5 font-mono text-xs text-studio-muted">{w.path}</div>

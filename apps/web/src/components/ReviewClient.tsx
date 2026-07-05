@@ -154,7 +154,7 @@ export function ReviewClient({
       {kind === 'script' && script && (
         <div className="space-y-3">
           {scriptSections(script, videoNo).map((section) => (
-            <div key={section.key} className="rounded-[14px] border border-studio bg-studio-card p-4">
+            <div key={section.key} className="rounded-[14px] border border-studio-border bg-studio-card p-4">
               <p className="studio-eyebrow mb-1">
                 {section.label}
               </p>
@@ -170,7 +170,7 @@ export function ReviewClient({
 
       {kind === 'video' &&
         (mediaUrl ? (
-          <div className="rounded-[14px] border border-studio bg-studio-card p-4">
+          <div className="rounded-[14px] border border-studio-border bg-studio-card p-4">
             <video controls playsInline src={mediaUrl} className="mx-auto max-h-[70vh] rounded" />
             <CommentBox sectionKey="video" />
           </div>
@@ -179,7 +179,7 @@ export function ReviewClient({
         ))}
 
       {sentComments.length > 0 && (
-        <div className="rounded-[10px] border border-studio bg-studio-card p-3 text-xs text-studio-sub">
+        <div className="rounded-[10px] border border-studio-border bg-studio-card p-3 text-xs text-studio-sub">
           <p className="mb-1 font-semibold text-studio-sub">Your comments:</p>
           {sentComments.map((c, i) => (
             <p key={i}>✓ {c}</p>
@@ -200,7 +200,7 @@ export function ReviewClient({
       )}
 
       {awaiting && !done && (
-        <div className="fixed inset-x-0 bottom-0 border-t border-studio bg-studio-card/95 p-4 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 border-t border-studio-border bg-studio-card/95 p-4 backdrop-blur">
           <div className="mx-auto max-w-xl space-y-2">
             <div className="flex flex-col gap-2 sm:flex-row">
               <input

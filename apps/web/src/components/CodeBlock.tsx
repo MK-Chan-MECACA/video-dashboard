@@ -8,7 +8,7 @@ export function CodeBlock({ code, label }: { code: string; label?: string }) {
   return (
     <div className="group relative">
       {label && <p className="mb-1 text-xs text-studio-muted">{label}</p>}
-      <pre className="overflow-x-auto rounded-[8px] border border-studio bg-studio-code p-3 font-mono text-xs leading-relaxed text-studio-text">
+      <pre className="overflow-x-auto rounded-[8px] border border-studio-border bg-studio-code p-3 font-mono text-xs leading-relaxed text-studio-text">
         <code>{code}</code>
       </pre>
       <button

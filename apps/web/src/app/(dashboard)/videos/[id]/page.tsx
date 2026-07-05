@@ -80,7 +80,7 @@ export default async function VideoDetailPage({
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           {script && (
-            <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+            <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
               <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">
                 Script v{script.version}
               </h2>
@@ -93,7 +93,7 @@ export default async function VideoDetailPage({
             </section>
           )}
 
-          <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+          <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
             <h2 className="mb-3 text-sm font-semibold text-[#d8cfbf]">Generated assets</h2>
             <div className="space-y-4">
               {voiceover && (
@@ -156,7 +156,7 @@ export default async function VideoDetailPage({
             }))}
           />
 
-          <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+          <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
             <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Danger zone</h2>
             <DeleteVideoButton videoId={v.id} videoNo={v.video_no} title={v.title} />
           </section>
@@ -164,7 +164,7 @@ export default async function VideoDetailPage({
 
         <div className="space-y-6">
           {cost.lines.length > 0 && (
-            <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+            <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
               <h2 className="mb-2 flex items-center justify-between text-sm font-semibold text-[#d8cfbf]">
                 Cost
                 <span className="font-mono text-studio-accent">
@@ -186,7 +186,7 @@ export default async function VideoDetailPage({
             </section>
           )}
 
-          <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+          <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
             <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Jobs</h2>
             <ul className="space-y-1 text-xs">
               {(jobs ?? []).map((j) => (
@@ -213,7 +213,7 @@ export default async function VideoDetailPage({
           </section>
 
           {(comments ?? []).length > 0 && (
-            <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+            <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
               <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Reviewer comments</h2>
               <ul className="space-y-2 text-xs">
                 {(comments ?? []).map((c) => (
@@ -227,7 +227,7 @@ export default async function VideoDetailPage({
           )}
 
           {(approvals ?? []).length > 0 && (
-            <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+            <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
               <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Approvals</h2>
               <ul className="space-y-1 text-xs">
                 {(approvals ?? []).map((a) => (
@@ -240,7 +240,7 @@ export default async function VideoDetailPage({
             </section>
           )}
 
-          <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+          <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
             <h2 className="mb-2 text-sm font-semibold text-[#d8cfbf]">Timeline</h2>
             <ul className="space-y-1 text-xs text-studio-sub">
               {(events ?? []).map((e) => (

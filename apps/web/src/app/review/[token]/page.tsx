@@ -11,7 +11,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ token: 
 
   if (!resolved) {
     return (
-      <div className="mx-auto mt-24 max-w-md rounded-[14px] border border-studio bg-studio-card p-6 text-center">
+      <div className="mx-auto mt-24 max-w-md rounded-[14px] border border-studio-border bg-studio-card p-6 text-center">
         <h1 className="text-lg font-semibold text-studio-bright">Link not valid</h1>
         <p className="mt-2 text-sm text-studio-sub">
           This review link has expired or been revoked. Please ask for a new one.

@@ -30,7 +30,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto mt-24 max-w-sm rounded-[14px] border border-studio bg-studio-card p-6">
+    <div className="mx-auto mt-24 max-w-sm rounded-[14px] border border-studio-border bg-studio-card p-6">
       <h1 className="mb-4 text-lg font-semibold text-studio-bright">Operator login</h1>
       <form onSubmit={submit} className="space-y-3">
         <input

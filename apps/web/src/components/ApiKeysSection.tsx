@@ -55,7 +55,7 @@ export function ApiKeysSection({ apiKeys }: { apiKeys: ApiKeyRow[] }) {
   }
 
   return (
-    <section className="space-y-3 rounded-[14px] border border-studio bg-studio-panel p-6">
+    <section className="space-y-3 rounded-[14px] border border-studio-border bg-studio-panel p-6">
       <h2 className="text-lg font-semibold text-studio-bright">API keys</h2>
       <p className="text-xs text-studio-muted">
         For third-party integrations and AI agents (REST API + MCP). Keys have full access to the
@@ -114,7 +114,7 @@ export function ApiKeysSection({ apiKeys }: { apiKeys: ApiKeyRow[] }) {
       {apiKeys.length > 0 && (
         <ul className="space-y-1">
           {apiKeys.map((k) => (
-            <li key={k.id} className="flex flex-wrap items-center gap-2 rounded-[10px] border border-studio bg-studio-card px-3 py-2.5 text-xs">
+            <li key={k.id} className="flex flex-wrap items-center gap-2 rounded-[10px] border border-studio-border bg-studio-card px-3 py-2.5 text-xs">
               <b>{k.name}</b>
               <code className="text-studio-muted">{k.key_prefix}…</code>
               <span className="text-studio-muted">{k.scopes.join(', ')}</span>

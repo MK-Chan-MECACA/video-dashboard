@@ -170,7 +170,7 @@ export function ScriptEditor({
         </span>
       </div>
 
-      <div className="space-y-4 rounded-[12px] border border-studio bg-studio-card p-5">
+      <div className="space-y-4 rounded-[12px] border border-studio-border bg-studio-card p-5">
         <Section
           label="Hook"
           sectionKey="hook"
@@ -178,7 +178,7 @@ export function ScriptEditor({
           onChange={(v) => setScript((s) => ({ ...s, hook: v }))}
         />
         {script.scenes.map((scene) => (
-          <div key={scene.index} className="space-y-2 rounded-[8px] border border-studio p-3">
+          <div key={scene.index} className="space-y-2 rounded-[8px] border border-studio-border p-3">
             <Section
               label={`${sceneCode(video.video_no, scene.index)} — voiceover`}
               sectionKey={`scene_${scene.index}`}
@@ -218,7 +218,7 @@ export function ScriptEditor({
         />
       </div>
 
-      <div className="space-y-3 rounded-[12px] border border-studio bg-studio-card p-5">
+      <div className="space-y-3 rounded-[12px] border border-studio-border bg-studio-card p-5">
         <label className="block text-sm text-studio-sub">
           Regeneration instructions (unresolved reviewer comments are included automatically)
         </label>
@@ -263,7 +263,7 @@ export function ScriptEditor({
       </div>
 
       {versions.length > 1 && (
-        <div className="rounded-[12px] border border-studio bg-studio-card p-5">
+        <div className="rounded-[12px] border border-studio-border bg-studio-card p-5">
           <h2 className="mb-2 text-sm font-semibold text-studio-sub">Version history</h2>
           <ul className="space-y-1 text-xs text-studio-sub">
             {versions.map((v) => (

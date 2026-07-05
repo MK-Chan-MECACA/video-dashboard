@@ -29,7 +29,7 @@ function Section({
   return (
     <section
       id={id}
-      className="scroll-mt-20 space-y-3 rounded-[12px] border border-studio bg-studio-card p-5"
+      className="scroll-mt-20 space-y-3 rounded-[12px] border border-studio-border bg-studio-card p-5"
     >
       <h2 className="flex items-baseline gap-2 text-sm font-semibold text-studio-bright">
         <span className="rounded-[5px] bg-studio-accent px-1.5 text-xs font-bold text-studio-on-accent">{n}</span>
@@ -246,7 +246,7 @@ export default function GuidePage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-studio font-mono text-[10px] uppercase tracking-wide text-studio-muted">
+              <tr className="border-b border-studio-border font-mono text-[10px] uppercase tracking-wide text-studio-muted">
                 <th className="py-1.5 pr-4 font-medium">Column</th>
                 <th className="py-1.5 pr-4 font-medium">Who acts</th>
                 <th className="py-1.5 font-medium">What to do</th>
@@ -265,7 +265,7 @@ export default function GuidePage() {
                   ['Failed', 'You', 'Read the error, fix the cause, retry failed jobs'],
                 ] as const
               ).map(([col, who, what]) => (
-                <tr key={col} className="border-b border-studio/60">
+                <tr key={col} className="border-b border-studio-border/60">
                   <td className="py-1.5 pr-4 whitespace-nowrap text-studio-bright">{col}</td>
                   <td className="py-1.5 pr-4 whitespace-nowrap">{who}</td>
                   <td className="py-1.5">{what}</td>

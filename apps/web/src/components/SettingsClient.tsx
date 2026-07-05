@@ -229,7 +229,7 @@ export function SettingsClient({
 
         <div className="min-w-0 flex-1">
 
-      <section className={`space-y-3 rounded-[14px] border border-studio bg-studio-panel p-6 ${show('brand')}`}>
+      <section className={`space-y-3 rounded-[14px] border border-studio-border bg-studio-panel p-6 ${show('brand')}`}>
         <h2 className="text-lg font-semibold text-studio-bright">Brand</h2>
         <p className="text-xs text-studio-muted">
           Shown in the dashboard header, the favicon, and on client review pages.
@@ -258,12 +258,12 @@ export function SettingsClient({
         </div>
       </section>
 
-      <section className={`space-y-4 rounded-[14px] border border-studio bg-studio-panel p-6 ${show('assets')}`}>
+      <section className={`space-y-4 rounded-[14px] border border-studio-border bg-studio-panel p-6 ${show('assets')}`}>
         <h2 className="text-lg font-semibold text-studio-bright">Brand assets</h2>
         {KINDS.map(({ kind, label, hint }) => {
           const items = brandAssets.filter((a) => a.kind === kind);
           return (
-            <div key={kind} className="rounded-[10px] border border-studio bg-studio-card p-3">
+            <div key={kind} className="rounded-[10px] border border-studio-border bg-studio-card p-3">
               <div className="mb-1 flex items-center justify-between">
                 <p className="text-sm font-medium">{label}</p>
                 <label className="cursor-pointer rounded-[6px] border border-studio-border-strong px-2 py-1 text-xs text-studio-sub hover:bg-studio-inset">
@@ -298,7 +298,7 @@ export function SettingsClient({
         })}
       </section>
 
-      <section className={`space-y-4 rounded-[14px] border border-studio bg-studio-panel p-6 ${show('layout')}`}>
+      <section className={`space-y-4 rounded-[14px] border border-studio-border bg-studio-panel p-6 ${show('layout')}`}>
         <h2 className="text-lg font-semibold text-studio-bright">Video layout template</h2>
         <p className="text-xs text-studio-muted">
           Controls how every video is composited: logo placement, subtitle position, and the
@@ -309,7 +309,7 @@ export function SettingsClient({
         <div className="flex flex-col-reverse gap-4 md:flex-row">
         <div className="min-w-0 flex-1 space-y-4">
 
-        <div className="rounded-[10px] border border-studio bg-studio-card p-3">
+        <div className="rounded-[10px] border border-studio-border bg-studio-card p-3">
           <p className="mb-1 text-sm font-medium">Render engine</p>
           <p className="mb-2 text-xs text-studio-muted">
             HyperFrames (HeyGen&apos;s HTML-based renderer) is the default and falls back to the
@@ -326,7 +326,7 @@ export function SettingsClient({
           </select>
         </div>
 
-        <div className="rounded-[10px] border border-studio bg-studio-card p-3">
+        <div className="rounded-[10px] border border-studio-border bg-studio-card p-3">
           <p className="mb-2 text-sm font-medium">Logo</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <label className="text-xs text-studio-sub">
@@ -364,7 +364,7 @@ export function SettingsClient({
           </div>
         </div>
 
-        <div className="rounded-[10px] border border-studio bg-studio-card p-3">
+        <div className="rounded-[10px] border border-studio-border bg-studio-card p-3">
           <p className="mb-2 text-sm font-medium">Subtitles</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <label className="text-xs text-studio-sub">
@@ -400,7 +400,7 @@ export function SettingsClient({
           </p>
         </div>
 
-        <div className="rounded-[10px] border border-studio bg-studio-card p-3">
+        <div className="rounded-[10px] border border-studio-border bg-studio-card p-3">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-medium">Presenter bubble during B-roll</p>
             <label className="flex items-center gap-2 text-xs text-studio-sub">
@@ -524,7 +524,7 @@ export function SettingsClient({
         </div>
       </section>
 
-      <section className={`space-y-3 rounded-[14px] border border-studio bg-studio-panel p-6 ${show('prompt')}`}>
+      <section className={`space-y-3 rounded-[14px] border border-studio-border bg-studio-panel p-6 ${show('prompt')}`}>
         <h2 className="text-lg font-semibold text-studio-bright">Claude script generator</h2>
         <p className="text-xs text-studio-muted">
           System prompt used every time Claude writes or regenerates a script. Claude also
@@ -569,7 +569,7 @@ export function SettingsClient({
         </div>
       </section>
 
-      <section className={`space-y-4 rounded-[14px] border border-studio bg-studio-panel p-6 ${show('presets')}`}>
+      <section className={`space-y-4 rounded-[14px] border border-studio-border bg-studio-panel p-6 ${show('presets')}`}>
         <h2 className="text-lg font-semibold text-studio-bright">AI Script Generator presets</h2>
         <p className="text-xs text-studio-muted">
           The dropdown options operators pick from on the New Video page when batch-generating
@@ -624,7 +624,7 @@ export function SettingsClient({
         </div>
       </section>
 
-      <section className={`space-y-3 rounded-[14px] border border-studio bg-studio-panel p-6 ${show('caption')}`}>
+      <section className={`space-y-3 rounded-[14px] border border-studio-border bg-studio-panel p-6 ${show('caption')}`}>
         <h2 className="text-lg font-semibold text-studio-bright">Claude caption writer</h2>
         <p className="text-xs text-studio-muted">
           System prompt used to write the post caption after the final video is approved.
@@ -668,7 +668,7 @@ export function SettingsClient({
         </div>
       </section>
 
-      <section className={`space-y-3 rounded-[14px] border border-studio bg-studio-panel p-6 ${show('voice')}`}>
+      <section className={`space-y-3 rounded-[14px] border border-studio-border bg-studio-panel p-6 ${show('voice')}`}>
         <h2 className="text-lg font-semibold text-studio-bright">HeyGen voice</h2>
         <p className="text-xs text-studio-muted">
           Current voice id: <code>{(settings.heygen_voice_id as string) || 'not set'}</code>
@@ -706,7 +706,7 @@ export function SettingsClient({
         )}
       </section>
 
-      <section className={`space-y-3 rounded-[14px] border border-studio bg-studio-panel p-6 ${show('social')}`}>
+      <section className={`space-y-3 rounded-[14px] border border-studio-border bg-studio-panel p-6 ${show('social')}`}>
         <h2 className="text-lg font-semibold text-studio-bright">GoHighLevel / social posting</h2>
         <p className="text-xs text-studio-muted">
           Posts go to the accounts in GHL_SOCIAL_ACCOUNT_IDS (comma-separated — TikTok,
@@ -722,7 +722,7 @@ export function SettingsClient({
         {ghlAccounts && (
           <ul className="space-y-1 text-xs">
             {ghlAccounts.map((a) => (
-              <li key={a.id} className="rounded-[10px] border border-studio bg-studio-card px-3 py-2.5">
+              <li key={a.id} className="rounded-[10px] border border-studio-border bg-studio-card px-3 py-2.5">
                 <b>{a.platform}</b> {a.name} — id: <code>{a.id}</code>
               </li>
             ))}

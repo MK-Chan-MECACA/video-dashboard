@@ -168,7 +168,7 @@ export function BoardClient({ videos: initial }: { videos: BoardVideo[] }) {
               className={`flex flex-1 items-center gap-3 rounded-[12px] border px-[17px] py-[15px] ${
                 a.highlight
                   ? 'border-[#3a2f16] bg-[linear-gradient(180deg,#1e1a10,#161410)]'
-                  : 'border-studio bg-studio-inset'
+                  : 'border-studio-border bg-studio-inset'
               }`}
             >
               <span

@@ -61,7 +61,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
   const activeLinks = links.filter((l) => !l.revoked && new Date(l.expires_at) > new Date());
 
   return (
-    <section className="rounded-[14px] border border-studio bg-studio-panel p-5">
+    <section className="rounded-[14px] border border-studio-border bg-studio-panel p-5">
       <h2 className="mb-3 text-sm font-semibold text-[#d8cfbf]">Actions</h2>
 
       <div className="flex flex-wrap gap-2">
@@ -140,7 +140,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
         </div>
       )}
 
-      <div className="mt-4 space-y-2 border-t border-studio pt-4">
+      <div className="mt-4 space-y-2 border-t border-studio-border pt-4">
         <label className="block text-xs text-studio-sub">Post caption</label>
         <textarea
           value={caption}

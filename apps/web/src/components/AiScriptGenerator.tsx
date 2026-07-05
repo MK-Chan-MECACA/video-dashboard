@@ -88,7 +88,7 @@ export default function AiScriptGenerator({ fields }: { fields: DirectionField[]
   const finished = items.length > 0 && !running;
 
   return (
-    <div className="space-y-4 rounded-[16px] border border-studio bg-studio-panel p-6">
+    <div className="space-y-4 rounded-[16px] border border-studio-border bg-studio-panel p-6">
       <div>
         <h2 className="text-[15px] font-semibold text-studio-accent">AI Script Generator</h2>
         <p className="mt-1 text-sm text-studio-sub">
@@ -178,7 +178,7 @@ export default function AiScriptGenerator({ fields }: { fields: DirectionField[]
       </div>
 
       {items.length > 0 && (
-        <ul className="space-y-1 border-t border-studio pt-3">
+        <ul className="space-y-1 border-t border-studio-border pt-3">
           {items.map((it, i) => (
             <li key={i} className="flex items-center gap-2 text-sm">
               {it.state === 'pending' && <span className="text-studio-faint">Waiting…</span>}
