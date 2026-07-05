@@ -115,12 +115,12 @@ export function ReviewClient({
           value={comment[sectionKey] ?? ''}
           onChange={(e) => setComment((c) => ({ ...c, [sectionKey]: e.target.value }))}
           placeholder="Add a comment…"
-          className="flex-1 rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs"
+          className="flex-1 rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1 text-xs"
         />
         <button
           onClick={() => sendComment(sectionKey)}
           disabled={busy === `c-${sectionKey}` || !comment[sectionKey]?.trim()}
-          className="rounded border border-neutral-700 px-2 py-1 text-xs hover:bg-neutral-800 disabled:opacity-40"
+          className="rounded-[8px] border border-studio-border-strong px-3 py-1 text-xs text-studio-sub hover:bg-studio-inset disabled:opacity-40"
         >
           Send
         </button>
@@ -130,21 +130,21 @@ export function ReviewClient({
   return (
     <div className="mx-auto max-w-xl space-y-5 pb-32">
       <div>
-        <p className="text-xs uppercase tracking-wide text-yellow-400">
+        <p className="studio-eyebrow">
           {brandName ? `${brandName} — ` : ''}
           {kind === 'script' ? 'Script' : 'Video'} review
         </p>
-        <h1 className="text-xl font-semibold">
-          {videoNo ? <span className="mr-2 font-mono text-yellow-400">V{videoNo}</span> : null}
+        <h1 className="mt-1.5 text-xl font-semibold text-studio-bright">
+          {videoNo ? <span className="mr-2 font-mono text-studio-accent">V{videoNo}</span> : null}
           {videoTitle}
         </h1>
         {script && kind === 'script' && (
-          <p className="text-xs text-neutral-500">Script version {script.version}</p>
+          <p className="text-xs text-studio-muted">Script version {script.version}</p>
         )}
       </div>
 
       {!awaiting && !done && (
-        <div className="rounded border border-neutral-700 bg-neutral-900 p-3 text-sm text-neutral-300">
+        <div className="rounded-[10px] border border-studio-border-strong bg-studio-card p-3 text-sm text-studio-sub">
           {lastDecision
             ? `This ${kind} was already ${lastDecision.decision.replace('_', ' ')} by ${lastDecision.reviewer_name} on ${new Date(lastDecision.created_at).toLocaleString()}.`
             : `This ${kind} is not currently awaiting review.`}
@@ -154,13 +154,13 @@ export function ReviewClient({
       {kind === 'script' && script && (
         <div className="space-y-3">
           {scriptSections(script, videoNo).map((section) => (
-            <div key={section.key} className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-yellow-400">
+            <div key={section.key} className="rounded-[14px] border border-studio bg-studio-card p-4">
+              <p className="studio-eyebrow mb-1">
                 {section.label}
               </p>
-              <p className="text-sm leading-relaxed">{section.text}</p>
+              <p className="text-sm leading-relaxed text-studio-text">{section.text}</p>
               {section.sub && (
-                <p className="mt-1 text-xs text-neutral-500">B-roll: {section.sub}</p>
+                <p className="mt-1 text-xs text-studio-muted">B-roll: {section.sub}</p>
               )}
               <CommentBox sectionKey={section.key} />
             </div>
@@ -170,17 +170,17 @@ export function ReviewClient({
 
       {kind === 'video' &&
         (mediaUrl ? (
-          <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+          <div className="rounded-[14px] border border-studio bg-studio-card p-4">
             <video controls playsInline src={mediaUrl} className="mx-auto max-h-[70vh] rounded" />
             <CommentBox sectionKey="video" />
           </div>
         ) : (
-          <p className="text-sm text-neutral-400">The final video is not ready yet.</p>
+          <p className="text-sm text-studio-sub">The final video is not ready yet.</p>
         ))}
 
       {sentComments.length > 0 && (
-        <div className="rounded border border-neutral-800 bg-neutral-900 p-3 text-xs text-neutral-400">
-          <p className="mb-1 font-semibold text-neutral-300">Your comments:</p>
+        <div className="rounded-[10px] border border-studio bg-studio-card p-3 text-xs text-studio-sub">
+          <p className="mb-1 font-semibold text-studio-sub">Your comments:</p>
           {sentComments.map((c, i) => (
             <p key={i}>✓ {c}</p>
           ))}
@@ -189,7 +189,7 @@ export function ReviewClient({
 
       {done && (
         <div
-          className={`rounded-lg p-4 text-center text-sm font-semibold ${
+          className={`rounded-[12px] p-4 text-center text-sm font-semibold ${
             done === 'approved' ? 'bg-emerald-900 text-emerald-100' : 'bg-orange-900 text-orange-100'
           }`}
         >
@@ -200,34 +200,34 @@ export function ReviewClient({
       )}
 
       {awaiting && !done && (
-        <div className="fixed inset-x-0 bottom-0 border-t border-neutral-800 bg-neutral-900/95 p-4 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 border-t border-studio bg-studio-card/95 p-4 backdrop-blur">
           <div className="mx-auto max-w-xl space-y-2">
             <div className="flex flex-col gap-2 sm:flex-row">
               <input
                 value={name}
                 onChange={(e) => remember(e.target.value)}
                 placeholder="Your name"
-                className="rounded border border-neutral-700 bg-neutral-800 px-2 py-2 text-sm sm:w-40"
+                className="rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm sm:w-40"
               />
               <input
                 value={changeNote}
                 onChange={(e) => setChangeNote(e.target.value)}
                 placeholder="Overall note (required when requesting changes)"
-                className="flex-1 rounded border border-neutral-700 bg-neutral-800 px-2 py-2 text-sm"
+                className="flex-1 rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
               />
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => decide('approved')}
                 disabled={!!busy}
-                className="flex-1 rounded bg-emerald-600 px-4 py-2.5 text-sm font-semibold hover:bg-emerald-500 disabled:opacity-50"
+                className="studio-lift flex-1 rounded-[10px] bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
               >
                 {busy === 'approved' ? 'Sending…' : '✓ Approve'}
               </button>
               <button
                 onClick={() => decide('changes_requested')}
                 disabled={!!busy || !changeNote.trim()}
-                className="flex-1 rounded bg-orange-700 px-4 py-2.5 text-sm font-semibold hover:bg-orange-600 disabled:opacity-50"
+                className="studio-lift flex-1 rounded-[10px] bg-orange-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 disabled:opacity-50"
               >
                 {busy === 'changes_requested' ? 'Sending…' : 'Request changes'}
               </button>

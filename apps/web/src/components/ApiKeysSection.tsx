@@ -55,21 +55,21 @@ export function ApiKeysSection({ apiKeys }: { apiKeys: ApiKeyRow[] }) {
   }
 
   return (
-    <section className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-      <h2 className="text-sm font-semibold text-neutral-300">API keys</h2>
-      <p className="text-xs text-neutral-500">
+    <section className="space-y-3 rounded-[12px] border border-studio bg-studio-card p-5">
+      <h2 className="text-sm font-semibold text-studio-sub">API keys</h2>
+      <p className="text-xs text-studio-muted">
         For third-party integrations and AI agents (REST API + MCP). Keys have full access to the
         pipeline — treat them like passwords. See <code>docs/API.md</code> for how to connect.
       </p>
-      {error && <p className="rounded bg-red-950 p-2 text-xs text-red-300">{error}</p>}
+      {error && <p className="rounded-[8px] bg-red-950 p-2 text-xs text-red-300">{error}</p>}
 
       {createdKey && (
-        <div className="space-y-2 rounded border border-yellow-700 bg-yellow-950/40 p-3">
-          <p className="text-xs font-semibold text-yellow-300">
+        <div className="space-y-2 rounded-[8px] border border-[#3a2f16] bg-[#2a2310] p-3">
+          <p className="text-xs font-semibold text-studio-accent">
             Copy this key now — it will not be shown again.
           </p>
           <div className="flex items-center gap-2">
-            <code className="min-w-0 flex-1 break-all rounded bg-neutral-950 p-2 text-xs text-yellow-200">
+            <code className="min-w-0 flex-1 break-all rounded-[6px] bg-studio-code p-2 text-xs text-studio-accent">
               {createdKey}
             </code>
             <button
@@ -77,13 +77,13 @@ export function ApiKeysSection({ apiKeys }: { apiKeys: ApiKeyRow[] }) {
                 await navigator.clipboard.writeText(createdKey);
                 setCopied(true);
               }}
-              className="shrink-0 rounded bg-yellow-400 px-3 py-1.5 text-xs font-semibold text-black"
+              className="studio-lift shrink-0 rounded-[9px] bg-studio-accent px-3 py-1.5 text-xs font-semibold text-studio-on-accent"
             >
               {copied ? 'Copied ✓' : 'Copy'}
             </button>
             <button
               onClick={() => setCreatedKey(null)}
-              className="shrink-0 rounded border border-neutral-700 px-3 py-1.5 text-xs hover:bg-neutral-800"
+              className="shrink-0 rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-xs text-studio-sub hover:bg-studio-inset"
             >
               Done
             </button>
@@ -96,16 +96,16 @@ export function ApiKeysSection({ apiKeys }: { apiKeys: ApiKeyRow[] }) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Key name (e.g. Zapier, Claude)"
-          className="w-64 rounded border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-sm"
+          className="w-64 rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-1.5 text-sm"
         />
-        <label className="flex items-center gap-1.5 text-xs text-neutral-400">
+        <label className="flex items-center gap-1.5 text-xs text-studio-sub">
           <input type="checkbox" checked={readOnly} onChange={(e) => setReadOnly(e.target.checked)} />
           read-only
         </label>
         <button
           onClick={createKey}
           disabled={busy || !name.trim()}
-          className="rounded bg-yellow-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-50"
+          className="studio-lift rounded-[9px] bg-studio-accent px-3 py-1.5 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
         >
           {busy ? 'Working…' : 'Create key'}
         </button>
@@ -114,14 +114,14 @@ export function ApiKeysSection({ apiKeys }: { apiKeys: ApiKeyRow[] }) {
       {apiKeys.length > 0 && (
         <ul className="space-y-1">
           {apiKeys.map((k) => (
-            <li key={k.id} className="flex flex-wrap items-center gap-2 rounded bg-neutral-950 p-2 text-xs">
+            <li key={k.id} className="flex flex-wrap items-center gap-2 rounded-[8px] bg-studio-code p-2 text-xs">
               <b>{k.name}</b>
-              <code className="text-neutral-500">{k.key_prefix}…</code>
-              <span className="text-neutral-500">{k.scopes.join(', ')}</span>
+              <code className="text-studio-muted">{k.key_prefix}…</code>
+              <span className="text-studio-muted">{k.scopes.join(', ')}</span>
               {k.revoked_at ? (
-                <span className="rounded bg-red-900 px-1.5 text-red-200">revoked</span>
+                <span className="rounded-[5px] bg-red-900 px-1.5 text-red-200">revoked</span>
               ) : (
-                <span className="text-neutral-600">
+                <span className="text-studio-faint">
                   {k.last_used_at
                     ? `last used ${new Date(k.last_used_at).toLocaleString()}`
                     : 'never used'}
@@ -131,7 +131,7 @@ export function ApiKeysSection({ apiKeys }: { apiKeys: ApiKeyRow[] }) {
                 <button
                   onClick={() => revokeKey(k.id, k.name)}
                   disabled={busy}
-                  className="ml-auto text-neutral-500 hover:text-red-400"
+                  className="ml-auto text-studio-muted hover:text-red-400"
                 >
                   revoke
                 </button>

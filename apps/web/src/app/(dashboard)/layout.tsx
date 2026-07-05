@@ -5,20 +5,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const brandName = await getBrandName();
   return (
     <>
-      <header className="border-b border-neutral-800 bg-neutral-900">
-        <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:gap-6 sm:px-6">
-          <Link href="/" className="flex items-center gap-2 font-bold tracking-tight">
-            <span className="rounded bg-yellow-400 px-1.5 py-0.5 text-sm text-black">
+      <header className="studio-header">
+        <div className="mx-auto flex h-full max-w-7xl items-center gap-3 px-4 sm:gap-6 sm:px-6">
+          <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight text-studio-bright">
+            <span className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-[linear-gradient(135deg,#e9b949,#c8912b)] text-xs font-bold text-studio-on-accent">
               {brandName ? brandInitials(brandName) : '▶'}
             </span>
-            <span className="hidden sm:inline">Video Dashboard</span>
+            <span className="hidden text-[15px] sm:inline">{brandName || 'Video Dashboard'}</span>
           </Link>
-          <nav className="ml-auto flex items-center gap-3 text-sm text-neutral-300 sm:gap-4">
-            <Link href="/" className="whitespace-nowrap hover:text-white">Pipeline</Link>
-            <Link href="/videos/new" className="whitespace-nowrap hover:text-white">New Video</Link>
-            <Link href="/guide" className="whitespace-nowrap hover:text-white">How to use</Link>
-            <Link href="/docs" className="whitespace-nowrap hover:text-white">API &amp; MCP</Link>
-            <Link href="/settings" className="whitespace-nowrap hover:text-white">Settings</Link>
+          <nav className="ml-auto flex items-center gap-3 text-sm text-studio-sub sm:gap-5">
+            <Link href="/" className="whitespace-nowrap hover:text-studio-bright">Pipeline</Link>
+            <Link href="/videos/new" className="whitespace-nowrap hover:text-studio-bright">New Video</Link>
+            <Link href="/guide" className="whitespace-nowrap hover:text-studio-bright">How to use</Link>
+            <Link href="/docs" className="whitespace-nowrap hover:text-studio-bright">API &amp; MCP</Link>
+            <Link href="/settings" className="whitespace-nowrap hover:text-studio-bright">Settings</Link>
           </nav>
         </div>
       </header>

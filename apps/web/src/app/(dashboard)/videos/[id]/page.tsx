@@ -65,14 +65,14 @@ export default async function VideoDetailPage({
         <StatusBadge status={v.status} />
         <Link
           href={`/videos/${v.id}/script`}
-          className="ml-auto rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800"
+          className="studio-lift ml-auto rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset"
         >
           Open script editor
         </Link>
       </div>
 
       {v.status === 'failed' && v.status_error && (
-        <div className="rounded border border-red-800 bg-red-950 p-3 text-sm text-red-200">
+        <div className="rounded-[8px] border border-red-800 bg-red-950 p-3 text-sm text-red-200">
           <b>Pipeline failed:</b> {v.status_error}
         </div>
       )}
@@ -80,8 +80,8 @@ export default async function VideoDetailPage({
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           {script && (
-            <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-              <h2 className="mb-2 text-sm font-semibold text-neutral-300">
+            <section className="rounded-[12px] border border-studio bg-studio-card p-4">
+              <h2 className="mb-2 text-sm font-semibold text-studio-sub">
                 Script v{script.version}
               </h2>
               <ScriptView
@@ -93,19 +93,19 @@ export default async function VideoDetailPage({
             </section>
           )}
 
-          <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-            <h2 className="mb-3 text-sm font-semibold text-neutral-300">Generated assets</h2>
+          <section className="rounded-[12px] border border-studio bg-studio-card p-4">
+            <h2 className="mb-3 text-sm font-semibold text-studio-sub">Generated assets</h2>
             <div className="space-y-4">
               {voiceover && (
                 <div>
-                  <p className="mb-1 text-xs text-neutral-400">Voiceover</p>
+                  <p className="mb-1 text-xs text-studio-sub">Voiceover</p>
                   <audio controls preload="metadata" src={`/api/media/${voiceover.id}`} className="w-full" />
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                 {avatar && (
                   <div>
-                    <p className="mb-1 text-xs text-neutral-400">Avatar</p>
+                    <p className="mb-1 text-xs text-studio-sub">Avatar</p>
                     <video
                       controls
                       preload="metadata"
@@ -116,7 +116,7 @@ export default async function VideoDetailPage({
                 )}
                 {scenes.map(({ i, asset }) => (
                   <div key={i}>
-                    <p className="mb-1 text-xs text-neutral-400">Scene {i}</p>
+                    <p className="mb-1 text-xs text-studio-sub">Scene {i}</p>
                     <video
                       controls
                       preload="metadata"
@@ -128,7 +128,7 @@ export default async function VideoDetailPage({
               </div>
               {finalVideo && (
                 <div>
-                  <p className="mb-1 text-xs text-neutral-400">Final video</p>
+                  <p className="mb-1 text-xs text-studio-sub">Final video</p>
                   <video
                     controls
                     preload="metadata"
@@ -138,7 +138,7 @@ export default async function VideoDetailPage({
                 </div>
               )}
               {!voiceover && !avatar && scenes.length === 0 && !finalVideo && (
-                <p className="text-sm text-neutral-500">
+                <p className="text-sm text-studio-muted">
                   Nothing generated yet — assets appear here as the pipeline runs.
                 </p>
               )}
@@ -156,38 +156,38 @@ export default async function VideoDetailPage({
             }))}
           />
 
-          <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-            <h2 className="mb-2 text-sm font-semibold text-neutral-300">Danger zone</h2>
+          <section className="rounded-[12px] border border-studio bg-studio-card p-4">
+            <h2 className="mb-2 text-sm font-semibold text-studio-sub">Danger zone</h2>
             <DeleteVideoButton videoId={v.id} videoNo={v.video_no} title={v.title} />
           </section>
         </div>
 
         <div className="space-y-6">
           {cost.lines.length > 0 && (
-            <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-              <h2 className="mb-2 flex items-center justify-between text-sm font-semibold text-neutral-300">
+            <section className="rounded-[12px] border border-studio bg-studio-card p-4">
+              <h2 className="mb-2 flex items-center justify-between text-sm font-semibold text-studio-sub">
                 Cost
-                <span className="font-mono text-yellow-400">
+                <span className="font-mono text-studio-accent">
                   {formatUsd(cost.totalUsd, cost.approx)}
                 </span>
               </h2>
               <ul className="space-y-1 text-xs">
                 {cost.lines.map((l, idx) => (
-                  <li key={idx} className="flex justify-between gap-2 text-neutral-400">
+                  <li key={idx} className="flex justify-between gap-2 text-studio-sub">
                     <span>{l.label}</span>
                     <span className="font-mono">{formatUsd(l.usd, l.approx)}</span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-2 text-[10px] text-neutral-600">
+              <p className="mt-2 text-[10px] text-studio-faint">
                 Estimated from generated durations at current provider rates; every
                 submitted generation counts, including re-generations.
               </p>
             </section>
           )}
 
-          <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-            <h2 className="mb-2 text-sm font-semibold text-neutral-300">Jobs</h2>
+          <section className="rounded-[12px] border border-studio bg-studio-card p-4">
+            <h2 className="mb-2 text-sm font-semibold text-studio-sub">Jobs</h2>
             <ul className="space-y-1 text-xs">
               {(jobs ?? []).map((j) => (
                 <li key={j.id} className="flex justify-between gap-2">
@@ -201,24 +201,24 @@ export default async function VideoDetailPage({
                         ? 'text-red-400'
                         : j.status === 'succeeded'
                           ? 'text-emerald-400'
-                          : 'text-neutral-400'
+                          : 'text-studio-sub'
                     }
                   >
                     {j.status}
                   </span>
                 </li>
               ))}
-              {(jobs ?? []).length === 0 && <li className="text-neutral-600">No jobs yet</li>}
+              {(jobs ?? []).length === 0 && <li className="text-studio-faint">No jobs yet</li>}
             </ul>
           </section>
 
           {(comments ?? []).length > 0 && (
-            <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-              <h2 className="mb-2 text-sm font-semibold text-neutral-300">Reviewer comments</h2>
+            <section className="rounded-[12px] border border-studio bg-studio-card p-4">
+              <h2 className="mb-2 text-sm font-semibold text-studio-sub">Reviewer comments</h2>
               <ul className="space-y-2 text-xs">
                 {(comments ?? []).map((c) => (
-                  <li key={c.id} className="rounded bg-neutral-950 p-2">
-                    <span className="text-yellow-400">[{c.section_key}]</span>{' '}
+                  <li key={c.id} className="rounded-[8px] bg-studio-code p-2">
+                    <span className="text-studio-accent">[{c.section_key}]</span>{' '}
                     <b>{c.author_name}:</b> {c.body}
                   </li>
                 ))}
@@ -227,8 +227,8 @@ export default async function VideoDetailPage({
           )}
 
           {(approvals ?? []).length > 0 && (
-            <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-              <h2 className="mb-2 text-sm font-semibold text-neutral-300">Approvals</h2>
+            <section className="rounded-[12px] border border-studio bg-studio-card p-4">
+              <h2 className="mb-2 text-sm font-semibold text-studio-sub">Approvals</h2>
               <ul className="space-y-1 text-xs">
                 {(approvals ?? []).map((a) => (
                   <li key={a.id}>
@@ -240,9 +240,9 @@ export default async function VideoDetailPage({
             </section>
           )}
 
-          <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-            <h2 className="mb-2 text-sm font-semibold text-neutral-300">Timeline</h2>
-            <ul className="space-y-1 text-xs text-neutral-400">
+          <section className="rounded-[12px] border border-studio bg-studio-card p-4">
+            <h2 className="mb-2 text-sm font-semibold text-studio-sub">Timeline</h2>
+            <ul className="space-y-1 text-xs text-studio-sub">
               {(events ?? []).map((e) => (
                 <li key={e.id}>
                   {new Date(e.created_at).toLocaleString()} — {e.event}

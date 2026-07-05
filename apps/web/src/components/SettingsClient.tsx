@@ -49,18 +49,37 @@ interface GhlAccount {
   name?: string;
 }
 
+/** Left sub-nav sections — one entry per top-level section rendered below. */
+const NAV: { id: string; label: string }[] = [
+  { id: 'brand', label: 'Brand' },
+  { id: 'assets', label: 'Brand assets' },
+  { id: 'layout', label: 'Video layout template' },
+  { id: 'prompt', label: 'Script prompt' },
+  { id: 'presets', label: 'Generator presets' },
+  { id: 'caption', label: 'Caption prompt' },
+  { id: 'voice', label: 'HeyGen voice' },
+  { id: 'social', label: 'Social posting' },
+  { id: 'api', label: 'API keys' },
+];
+
 export function SettingsClient({
   brandAssets,
   settings,
   defaultScriptPrompt,
   defaultCaptionPrompt,
+  children,
 }: {
   brandAssets: BrandAssetRow[];
   settings: Record<string, unknown>;
   defaultScriptPrompt: string;
   defaultCaptionPrompt: string;
+  /** API keys section, rendered inside the switcher as the last nav item. */
+  children?: React.ReactNode;
 }) {
   const router = useRouter();
+  const [section, setSection] = useState('brand');
+  /** Pure show/hide — every section stays mounted so in-progress edits never reset. */
+  const show = (id: string) => (section === id ? '' : 'hidden');
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [voices, setVoices] = useState<Voice[] | null>(null);
@@ -184,13 +203,35 @@ export function SettingsClient({
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-xl font-semibold">Settings</h1>
-      {error && <p className="rounded bg-red-950 p-2 text-sm text-red-300">{error}</p>}
+    <div className="mx-auto max-w-[1120px]">
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-studio-bright">Settings</h1>
+      {error && <p className="mb-5 rounded-[8px] bg-red-950 p-2 text-sm text-red-300">{error}</p>}
 
-      <section className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="text-sm font-semibold text-neutral-300">Brand</h2>
-        <p className="text-xs text-neutral-500">
+      <div className="flex flex-col gap-7 md:flex-row md:items-start">
+        <nav className="shrink-0 md:sticky md:top-[76px] md:w-[210px]">
+          <div className="studio-eyebrow mb-2.5 px-2">White-label</div>
+          <div className="flex flex-wrap gap-1 md:flex-col">
+            {NAV.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => setSection(n.id)}
+                className={`rounded-[8px] px-3 py-2 text-left text-sm transition-colors ${
+                  section === n.id
+                    ? 'bg-studio-accent font-semibold text-studio-on-accent'
+                    : 'text-studio-sub hover:text-studio-bright'
+                }`}
+              >
+                {n.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        <div className="min-w-0 flex-1">
+
+      <section className={`space-y-3 rounded-[12px] border border-studio bg-studio-card p-5 ${show('brand')}`}>
+        <h2 className="text-sm font-semibold text-studio-sub">Brand</h2>
+        <p className="text-xs text-studio-muted">
           Shown in the dashboard header, the favicon, and on client review pages.
         </p>
         <div className="flex items-center gap-2">
@@ -201,7 +242,7 @@ export function SettingsClient({
               setBrandSaved(false);
             }}
             placeholder="Brand Name"
-            className="w-64 rounded border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-sm"
+            className="w-64 rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-1.5 text-sm"
           />
           <button
             onClick={async () => {
@@ -209,7 +250,7 @@ export function SettingsClient({
               if (ok) setBrandSaved(true);
             }}
             disabled={!!busy}
-            className="rounded bg-yellow-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-50"
+            className="studio-lift rounded-[9px] bg-studio-accent px-3 py-1.5 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
           >
             {busy === 'brand_name' ? 'Saving…' : 'Save'}
           </button>
@@ -217,15 +258,15 @@ export function SettingsClient({
         </div>
       </section>
 
-      <section className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="text-sm font-semibold text-neutral-300">Brand assets</h2>
+      <section className={`space-y-4 rounded-[12px] border border-studio bg-studio-card p-5 ${show('assets')}`}>
+        <h2 className="text-sm font-semibold text-studio-sub">Brand assets</h2>
         {KINDS.map(({ kind, label, hint }) => {
           const items = brandAssets.filter((a) => a.kind === kind);
           return (
-            <div key={kind} className="rounded border border-neutral-800 p-3">
+            <div key={kind} className="rounded-[8px] border border-studio p-3">
               <div className="mb-1 flex items-center justify-between">
                 <p className="text-sm font-medium">{label}</p>
-                <label className="cursor-pointer rounded border border-neutral-700 px-2 py-1 text-xs hover:bg-neutral-800">
+                <label className="cursor-pointer rounded-[6px] border border-studio-border-strong px-2 py-1 text-xs text-studio-sub hover:bg-studio-inset">
                   {busy === kind ? 'Uploading…' : 'Upload'}
                   <input
                     type="file"
@@ -239,14 +280,14 @@ export function SettingsClient({
                   />
                 </label>
               </div>
-              <p className="mb-2 text-xs text-neutral-500">{hint}</p>
+              <p className="mb-2 text-xs text-studio-muted">{hint}</p>
               {items.length === 0 && <p className="text-xs text-orange-400">None uploaded yet — required before generation.</p>}
               <ul className="space-y-1">
                 {items.map((a) => (
                   <li key={a.id} className="flex items-center gap-2 text-xs">
                     <span>{a.name}</span>
-                    {a.is_default && <span className="rounded bg-emerald-900 px-1.5 text-emerald-200">default</span>}
-                    <button onClick={() => removeAsset(a.id)} className="ml-auto text-neutral-500 hover:text-red-400">
+                    {a.is_default && <span className="rounded-[5px] bg-emerald-900 px-1.5 text-emerald-200">default</span>}
+                    <button onClick={() => removeAsset(a.id)} className="ml-auto text-studio-muted hover:text-red-400">
                       delete
                     </button>
                   </li>
@@ -257,9 +298,9 @@ export function SettingsClient({
         })}
       </section>
 
-      <section className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="text-sm font-semibold text-neutral-300">Video layout template</h2>
-        <p className="text-xs text-neutral-500">
+      <section className={`space-y-4 rounded-[12px] border border-studio bg-studio-card p-5 ${show('layout')}`}>
+        <h2 className="text-sm font-semibold text-studio-sub">Video layout template</h2>
+        <p className="text-xs text-studio-muted">
           Controls how every video is composited: logo placement, subtitle position, and the
           circular presenter bubble shown while B-roll scenes play. All sizes are in pixels on the
           1080×1920 frame. Applies to new renders — use Re-render on a video to apply changes.
@@ -268,9 +309,9 @@ export function SettingsClient({
         <div className="flex flex-col-reverse gap-4 md:flex-row">
         <div className="min-w-0 flex-1 space-y-4">
 
-        <div className="rounded border border-neutral-800 p-3">
+        <div className="rounded-[8px] border border-studio p-3">
           <p className="mb-1 text-sm font-medium">Render engine</p>
-          <p className="mb-2 text-xs text-neutral-500">
+          <p className="mb-2 text-xs text-studio-muted">
             HyperFrames (HeyGen&apos;s HTML-based renderer) is the default and falls back to the
             ffmpeg engine automatically if a render fails. Both read the layout template below.
           </p>
@@ -278,22 +319,22 @@ export function SettingsClient({
             value={(settings.render_engine as string) === 'ffmpeg' ? 'ffmpeg' : 'hyperframes'}
             onChange={(e) => saveSetting('render_engine', e.target.value)}
             disabled={!!busy}
-            className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-200"
+            className="rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1.5 text-sm text-studio-text"
           >
             <option value="hyperframes">HyperFrames (default)</option>
             <option value="ffmpeg">ffmpeg only</option>
           </select>
         </div>
 
-        <div className="rounded border border-neutral-800 p-3">
+        <div className="rounded-[8px] border border-studio p-3">
           <p className="mb-2 text-sm font-medium">Logo</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <label className="text-xs text-neutral-400">
+            <label className="text-xs text-studio-sub">
               Position
               <select
                 value={tpl.logo.position}
                 onChange={(e) => patchTpl({ logo: { position: e.target.value as RenderTemplate['logo']['position'] } })}
-                className="mt-1 w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-200"
+                className="mt-1 w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1.5 text-sm text-studio-text"
               >
                 <option value="top_left">Top left</option>
                 <option value="top_center">Top center</option>
@@ -302,49 +343,49 @@ export function SettingsClient({
                 <option value="bottom_right">Bottom right</option>
               </select>
             </label>
-            <label className="text-xs text-neutral-400">
+            <label className="text-xs text-studio-sub">
               Width (px)
               <input
                 type="number"
                 value={tpl.logo.widthPx}
                 onChange={(e) => patchTpl({ logo: { widthPx: Number(e.target.value) } })}
-                className="mt-1 w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-200"
+                className="mt-1 w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1.5 text-sm text-studio-text"
               />
             </label>
-            <label className="text-xs text-neutral-400">
+            <label className="text-xs text-studio-sub">
               Edge margin (px)
               <input
                 type="number"
                 value={tpl.logo.marginPx}
                 onChange={(e) => patchTpl({ logo: { marginPx: Number(e.target.value) } })}
-                className="mt-1 w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-200"
+                className="mt-1 w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1.5 text-sm text-studio-text"
               />
             </label>
           </div>
         </div>
 
-        <div className="rounded border border-neutral-800 p-3">
+        <div className="rounded-[8px] border border-studio p-3">
           <p className="mb-2 text-sm font-medium">Subtitles</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <label className="text-xs text-neutral-400">
+            <label className="text-xs text-studio-sub">
               Font size (px)
               <input
                 type="number"
                 value={tpl.subtitles.fontSizePx}
                 onChange={(e) => patchTpl({ subtitles: { fontSizePx: Number(e.target.value) } })}
-                className="mt-1 w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-200"
+                className="mt-1 w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1.5 text-sm text-studio-text"
               />
             </label>
-            <label className="text-xs text-neutral-400">
+            <label className="text-xs text-studio-sub">
               Height above bottom (px)
               <input
                 type="number"
                 value={tpl.subtitles.marginVPx}
                 onChange={(e) => patchTpl({ subtitles: { marginVPx: Number(e.target.value) } })}
-                className="mt-1 w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-200"
+                className="mt-1 w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1.5 text-sm text-studio-text"
               />
             </label>
-            <label className="flex items-end gap-2 pb-1.5 text-xs text-neutral-400">
+            <label className="flex items-end gap-2 pb-1.5 text-xs text-studio-sub">
               <input
                 type="checkbox"
                 checked={tpl.subtitles.uppercase}
@@ -353,16 +394,16 @@ export function SettingsClient({
               UPPERCASE
             </label>
           </div>
-          <p className="mt-2 text-xs text-neutral-600">
+          <p className="mt-2 text-xs text-studio-faint">
             Higher &quot;height above bottom&quot; moves subtitles toward the middle of the frame
             (560 ≈ lower third, keeps clear of the platform UI overlays).
           </p>
         </div>
 
-        <div className="rounded border border-neutral-800 p-3">
+        <div className="rounded-[8px] border border-studio p-3">
           <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-medium">Presenter bubble during B-roll</p>
-            <label className="flex items-center gap-2 text-xs text-neutral-400">
+            <label className="flex items-center gap-2 text-xs text-studio-sub">
               <input
                 type="checkbox"
                 checked={tpl.avatarBubble.enabled}
@@ -371,41 +412,41 @@ export function SettingsClient({
               enabled
             </label>
           </div>
-          <p className="mb-2 text-xs text-neutral-500">
+          <p className="mb-2 text-xs text-studio-muted">
             While a scene clip plays full-screen, the presenter&apos;s head stays visible in a
             circle. The crop controls pick which part of the avatar video fills the circle.
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <label className="text-xs text-neutral-400">
+            <label className="text-xs text-studio-sub">
               Position
               <select
                 value={tpl.avatarBubble.position}
                 onChange={(e) => patchTpl({ avatarBubble: { position: e.target.value as RenderTemplate['avatarBubble']['position'] } })}
-                className="mt-1 w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-200"
+                className="mt-1 w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1.5 text-sm text-studio-text"
               >
                 <option value="bottom_left">Bottom left</option>
                 <option value="bottom_right">Bottom right</option>
               </select>
             </label>
-            <label className="text-xs text-neutral-400">
+            <label className="text-xs text-studio-sub">
               Circle size (px)
               <input
                 type="number"
                 value={tpl.avatarBubble.diameterPx}
                 onChange={(e) => patchTpl({ avatarBubble: { diameterPx: Number(e.target.value) } })}
-                className="mt-1 w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-200"
+                className="mt-1 w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1.5 text-sm text-studio-text"
               />
             </label>
-            <label className="text-xs text-neutral-400">
+            <label className="text-xs text-studio-sub">
               Edge margin (px)
               <input
                 type="number"
                 value={tpl.avatarBubble.marginPx}
                 onChange={(e) => patchTpl({ avatarBubble: { marginPx: Number(e.target.value) } })}
-                className="mt-1 w-full rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm text-neutral-200"
+                className="mt-1 w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1.5 text-sm text-studio-text"
               />
             </label>
-            <label className="text-xs text-neutral-400">
+            <label className="text-xs text-studio-sub">
               Head zoom ({Math.round(tpl.avatarBubble.crop.widthFrac * 100)}% of frame)
               <input
                 type="range"
@@ -416,7 +457,7 @@ export function SettingsClient({
                 className="mt-2 w-full"
               />
             </label>
-            <label className="text-xs text-neutral-400">
+            <label className="text-xs text-studio-sub">
               Head horizontal ({Math.round(tpl.avatarBubble.crop.centerXFrac * 100)}%)
               <input
                 type="range"
@@ -427,7 +468,7 @@ export function SettingsClient({
                 className="mt-2 w-full"
               />
             </label>
-            <label className="text-xs text-neutral-400">
+            <label className="text-xs text-studio-sub">
               Head top offset ({Math.round(tpl.avatarBubble.crop.topFrac * 100)}%)
               <input
                 type="range"
@@ -439,7 +480,7 @@ export function SettingsClient({
               />
             </label>
           </div>
-          <p className="mt-2 text-xs text-neutral-600">
+          <p className="mt-2 text-xs text-studio-faint">
             Smaller zoom = tighter on the head. Lower top offset = higher in the frame.
           </p>
         </div>
@@ -451,7 +492,7 @@ export function SettingsClient({
               if (ok) setTplSaved(true);
             }}
             disabled={!!busy}
-            className="rounded bg-yellow-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-50"
+            className="studio-lift rounded-[9px] bg-studio-accent px-3 py-1.5 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
           >
             {busy === 'render_template' ? 'Saving…' : 'Save layout'}
           </button>
@@ -461,7 +502,7 @@ export function SettingsClient({
               setTplSaved(false);
             }}
             disabled={!!busy}
-            className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+            className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
           >
             Reset to default
           </button>
@@ -483,9 +524,9 @@ export function SettingsClient({
         </div>
       </section>
 
-      <section className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="text-sm font-semibold text-neutral-300">Claude script generator</h2>
-        <p className="text-xs text-neutral-500">
+      <section className={`space-y-3 rounded-[12px] border border-studio bg-studio-card p-5 ${show('prompt')}`}>
+        <h2 className="text-sm font-semibold text-studio-sub">Claude script generator</h2>
+        <p className="text-xs text-studio-muted">
           System prompt used every time Claude writes or regenerates a script. Claude also
           remembers your previously generated scripts automatically, so new requests get fresh
           hooks and angles instead of repeats.
@@ -498,7 +539,7 @@ export function SettingsClient({
           }}
           rows={14}
           spellCheck={false}
-          className="w-full rounded border border-neutral-700 bg-neutral-950 p-3 font-mono text-xs leading-relaxed text-neutral-200"
+          className="w-full rounded-[8px] border border-studio-border-strong bg-studio-code p-3 font-mono text-xs leading-relaxed text-studio-text"
         />
         <div className="flex items-center gap-2">
           <button
@@ -507,7 +548,7 @@ export function SettingsClient({
               if (ok) setPromptSaved(true);
             }}
             disabled={!!busy}
-            className="rounded bg-yellow-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-50"
+            className="studio-lift rounded-[9px] bg-studio-accent px-3 py-1.5 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
           >
             {busy === 'script_system_prompt' ? 'Saving…' : 'Save prompt'}
           </button>
@@ -517,20 +558,20 @@ export function SettingsClient({
               setPromptSaved(false);
             }}
             disabled={!!busy}
-            className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+            className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
           >
             Reset to default
           </button>
           {promptSaved && <span className="text-xs text-emerald-400">Saved ✓</span>}
           {savedPrompt && savedPrompt !== defaultScriptPrompt && (
-            <span className="ml-auto text-xs text-neutral-500">custom prompt active</span>
+            <span className="ml-auto text-xs text-studio-muted">custom prompt active</span>
           )}
         </div>
       </section>
 
-      <section className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="text-sm font-semibold text-neutral-300">AI Script Generator presets</h2>
-        <p className="text-xs text-neutral-500">
+      <section className={`space-y-4 rounded-[12px] border border-studio bg-studio-card p-5 ${show('presets')}`}>
+        <h2 className="text-sm font-semibold text-studio-sub">AI Script Generator presets</h2>
+        <p className="text-xs text-studio-muted">
           The dropdown options operators pick from on the New Video page when batch-generating
           scripts. One preset per line as <code>Label | prompt text sent to Claude</code>. Leave a
           field to use the built-in defaults. These only tailor the menu — the brand voice still
@@ -538,7 +579,7 @@ export function SettingsClient({
         </p>
         {DEFAULT_DIRECTION_FIELDS.map((f) => (
           <div key={f.key}>
-            <label className="mb-1 block text-xs font-medium text-neutral-400">{f.label}</label>
+            <label className="mb-1 block text-xs font-medium text-studio-sub">{f.label}</label>
             <textarea
               value={directionText[f.key]}
               onChange={(e) => {
@@ -547,7 +588,7 @@ export function SettingsClient({
               }}
               rows={5}
               spellCheck={false}
-              className="w-full rounded border border-neutral-700 bg-neutral-950 p-3 font-mono text-xs leading-relaxed text-neutral-200"
+              className="w-full rounded-[8px] border border-studio-border-strong bg-studio-code p-3 font-mono text-xs leading-relaxed text-studio-text"
             />
           </div>
         ))}
@@ -561,7 +602,7 @@ export function SettingsClient({
               if (ok) setDirectionSaved(true);
             }}
             disabled={!!busy}
-            className="rounded bg-yellow-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-50"
+            className="studio-lift rounded-[9px] bg-studio-accent px-3 py-1.5 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
           >
             {busy === 'script_direction_presets' ? 'Saving…' : 'Save presets'}
           </button>
@@ -575,7 +616,7 @@ export function SettingsClient({
               setDirectionSaved(false);
             }}
             disabled={!!busy}
-            className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+            className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
           >
             Reset to default
           </button>
@@ -583,9 +624,9 @@ export function SettingsClient({
         </div>
       </section>
 
-      <section className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="text-sm font-semibold text-neutral-300">Claude caption writer</h2>
-        <p className="text-xs text-neutral-500">
+      <section className={`space-y-3 rounded-[12px] border border-studio bg-studio-card p-5 ${show('caption')}`}>
+        <h2 className="text-sm font-semibold text-studio-sub">Claude caption writer</h2>
+        <p className="text-xs text-studio-muted">
           System prompt used to write the post caption after the final video is approved.
           Put your brand, hashtags, and local tags here.
         </p>
@@ -597,7 +638,7 @@ export function SettingsClient({
           }}
           rows={6}
           spellCheck={false}
-          className="w-full rounded border border-neutral-700 bg-neutral-950 p-3 font-mono text-xs leading-relaxed text-neutral-200"
+          className="w-full rounded-[8px] border border-studio-border-strong bg-studio-code p-3 font-mono text-xs leading-relaxed text-studio-text"
         />
         <div className="flex items-center gap-2">
           <button
@@ -606,7 +647,7 @@ export function SettingsClient({
               if (ok) setCaptionSaved(true);
             }}
             disabled={!!busy}
-            className="rounded bg-yellow-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-50"
+            className="studio-lift rounded-[9px] bg-studio-accent px-3 py-1.5 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
           >
             {busy === 'caption_system_prompt' ? 'Saving…' : 'Save prompt'}
           </button>
@@ -616,27 +657,27 @@ export function SettingsClient({
               setCaptionSaved(false);
             }}
             disabled={!!busy}
-            className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+            className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
           >
             Reset to default
           </button>
           {captionSaved && <span className="text-xs text-emerald-400">Saved ✓</span>}
           {savedCaptionPrompt && savedCaptionPrompt !== defaultCaptionPrompt && (
-            <span className="ml-auto text-xs text-neutral-500">custom prompt active</span>
+            <span className="ml-auto text-xs text-studio-muted">custom prompt active</span>
           )}
         </div>
       </section>
 
-      <section className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="text-sm font-semibold text-neutral-300">HeyGen voice</h2>
-        <p className="text-xs text-neutral-500">
+      <section className={`space-y-3 rounded-[12px] border border-studio bg-studio-card p-5 ${show('voice')}`}>
+        <h2 className="text-sm font-semibold text-studio-sub">HeyGen voice</h2>
+        <p className="text-xs text-studio-muted">
           Current voice id: <code>{(settings.heygen_voice_id as string) || 'not set'}</code>
         </p>
         {!voices ? (
           <button
             onClick={loadVoices}
             disabled={!!busy}
-            className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+            className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
           >
             {busy === 'voices' ? 'Loading…' : 'Load English voices'}
           </button>
@@ -645,7 +686,7 @@ export function SettingsClient({
             <select
               value={voiceId}
               onChange={(e) => setVoiceId(e.target.value)}
-              className="flex-1 rounded border border-neutral-700 bg-neutral-800 px-2 py-1.5 text-sm"
+              className="flex-1 rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1.5 text-sm"
             >
               <option value="">— pick a voice —</option>
               {voices.map((v) => (
@@ -657,7 +698,7 @@ export function SettingsClient({
             <button
               onClick={() => saveSetting('heygen_voice_id', voiceId)}
               disabled={!voiceId || !!busy}
-              className="rounded bg-yellow-400 px-3 py-1.5 text-sm font-semibold text-black disabled:opacity-50"
+              className="studio-lift rounded-[9px] bg-studio-accent px-3 py-1.5 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
             >
               Save
             </button>
@@ -665,23 +706,23 @@ export function SettingsClient({
         )}
       </section>
 
-      <section className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <h2 className="text-sm font-semibold text-neutral-300">GoHighLevel / social posting</h2>
-        <p className="text-xs text-neutral-500">
+      <section className={`space-y-3 rounded-[12px] border border-studio bg-studio-card p-5 ${show('social')}`}>
+        <h2 className="text-sm font-semibold text-studio-sub">GoHighLevel / social posting</h2>
+        <p className="text-xs text-studio-muted">
           Posts go to the accounts in GHL_SOCIAL_ACCOUNT_IDS (comma-separated — TikTok,
           Instagram, Facebook, ...) as user GHL_USER_ID. Use this to look the ids up.
         </p>
         <button
           onClick={loadGhl}
           disabled={!!busy}
-          className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+          className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
         >
           {busy === 'ghl' ? 'Loading…' : 'List connected social accounts'}
         </button>
         {ghlAccounts && (
           <ul className="space-y-1 text-xs">
             {ghlAccounts.map((a) => (
-              <li key={a.id} className="rounded bg-neutral-950 p-2">
+              <li key={a.id} className="rounded-[8px] bg-studio-code p-2">
                 <b>{a.platform}</b> {a.name} — id: <code>{a.id}</code>
               </li>
             ))}
@@ -693,6 +734,10 @@ export function SettingsClient({
           </ul>
         )}
       </section>
+
+        <div className={show('api')}>{children}</div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -214,7 +214,7 @@ export function RenderTemplatePreview({
   return (
     <div className="space-y-2">
       <div
-        className="relative overflow-hidden rounded-lg border border-neutral-700 bg-black"
+        className="relative overflow-hidden rounded-[10px] border border-studio-border-strong bg-black"
         style={{ width: Math.round(W * SCALE), height: Math.round(H * SCALE) }}
       >
         <div
@@ -305,7 +305,7 @@ export function RenderTemplatePreview({
         </div>
       </div>
 
-      <div className="flex rounded border border-neutral-700 p-0.5 text-xs" style={{ width: Math.round(W * SCALE) }}>
+      <div className="flex rounded-[8px] border border-studio-border-strong p-0.5 text-xs" style={{ width: Math.round(W * SCALE) }}>
         {(
           [
             ['broll', 'B-roll scene'],
@@ -315,19 +315,19 @@ export function RenderTemplatePreview({
           <button
             key={value}
             onClick={() => setMode(value)}
-            className={`flex-1 rounded px-2 py-1 ${
-              mode === value ? 'bg-neutral-700 text-neutral-100' : 'text-neutral-400 hover:text-neutral-200'
+            className={`flex-1 rounded-[6px] px-2 py-1 ${
+              mode === value ? 'bg-studio-inset text-studio-bright' : 'text-studio-muted hover:text-studio-sub'
             }`}
           >
             {label}
           </button>
         ))}
       </div>
-      <label className="flex items-center gap-2 text-xs text-neutral-400">
+      <label className="flex items-center gap-2 text-xs text-studio-sub">
         <input type="checkbox" checked={safeZones} onChange={(e) => setSafeZones(e.target.checked)} />
         Show platform UI zones
       </label>
-      <p className="text-xs text-neutral-600" style={{ width: Math.round(W * SCALE) }}>
+      <p className="text-xs text-studio-faint" style={{ width: Math.round(W * SCALE) }}>
         Live preview using the render engine&apos;s exact layout math. The bubble appears only while
         B-roll plays; logo and subtitles show throughout the main part.
       </p>

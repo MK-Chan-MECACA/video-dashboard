@@ -24,17 +24,17 @@ export function ScriptView({
     return (
       <div className="space-y-3 text-sm">
         <div>
-          <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-yellow-400">
+          <p className="studio-eyebrow mb-1">
             Voiceover
           </p>
           <p className="leading-relaxed">{passage}</p>
         </div>
         {scenes.map((s) => (
           <div key={s.index}>
-            <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-yellow-400">
+            <p className="studio-eyebrow mb-1">
               {sceneCode(videoNo, s.index)} — B-roll
             </p>
-            <p className="leading-relaxed text-neutral-300">{s.broll_prompt}</p>
+            <p className="leading-relaxed text-studio-sub">{s.broll_prompt}</p>
           </div>
         ))}
       </div>
@@ -44,20 +44,20 @@ export function ScriptView({
   return (
     <div className="space-y-2 text-sm">
       <p>
-        <b className="text-yellow-400">Hook:</b> {hook}
+        <b className="text-studio-accent">Hook:</b> {hook}
       </p>
       {scenes.map((s) => (
         <div key={s.index}>
           <p>
-            <b className="text-yellow-400">{sceneCode(videoNo, s.index)}:</b> {s.voiceover}
+            <b className="text-studio-accent">{sceneCode(videoNo, s.index)}:</b> {s.voiceover}
           </p>
           {s.broll_prompt && (
-            <p className="mt-0.5 text-xs text-neutral-500">B-roll: {s.broll_prompt}</p>
+            <p className="mt-0.5 text-xs text-studio-muted">B-roll: {s.broll_prompt}</p>
           )}
         </div>
       ))}
       <p>
-        <b className="text-yellow-400">CTA:</b> {cta}
+        <b className="text-studio-accent">CTA:</b> {cta}
       </p>
     </div>
   );

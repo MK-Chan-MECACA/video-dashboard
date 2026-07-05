@@ -29,10 +29,10 @@ function Section({
   return (
     <section
       id={id}
-      className="scroll-mt-20 space-y-3 rounded-lg border border-neutral-800 bg-neutral-900 p-5"
+      className="scroll-mt-20 space-y-3 rounded-[12px] border border-studio bg-studio-card p-5"
     >
-      <h2 className="flex items-baseline gap-2 text-sm font-semibold text-neutral-200">
-        <span className="rounded bg-yellow-400 px-1.5 text-xs font-bold text-black">{n}</span>
+      <h2 className="flex items-baseline gap-2 text-sm font-semibold text-studio-bright">
+        <span className="rounded-[5px] bg-studio-accent px-1.5 text-xs font-bold text-studio-on-accent">{n}</span>
         {title}
       </h2>
       {children}
@@ -42,7 +42,7 @@ function Section({
 
 function Btn({ children }: { children: React.ReactNode }) {
   return (
-    <span className="whitespace-nowrap rounded border border-yellow-500/40 bg-yellow-400/15 px-1.5 py-0.5 font-mono text-[11px] text-yellow-300">
+    <span className="whitespace-nowrap rounded-[5px] border border-studio-accent/40 bg-studio-accent/15 px-1.5 py-0.5 font-mono text-[11px] text-studio-accent">
       {children}
     </span>
   );
@@ -50,22 +50,22 @@ function Btn({ children }: { children: React.ReactNode }) {
 
 function Tip({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded border-l-2 border-yellow-400 bg-neutral-800/60 px-3 py-2 text-xs text-neutral-300">
-      <span className="mr-1 font-semibold uppercase tracking-wide text-yellow-400">{label}</span>
+    <div className="rounded-[6px] border-l-2 border-studio-accent bg-studio-inset/60 px-3 py-2 text-xs text-studio-sub">
+      <span className="mr-1 font-semibold uppercase tracking-wide text-studio-accent">{label}</span>
       {children}
     </div>
   );
 }
 
-const P = 'text-xs leading-relaxed text-neutral-400';
-const LI = 'text-xs leading-relaxed text-neutral-400';
+const P = 'text-xs leading-relaxed text-studio-sub';
+const LI = 'text-xs leading-relaxed text-studio-sub';
 
 export default function GuidePage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">How to use this dashboard</h1>
-        <p className="mt-1 text-sm text-neutral-400">
+        <h1 className="text-2xl font-semibold tracking-tight text-studio-bright">How to use this dashboard</h1>
+        <p className="mt-1.5 text-sm text-studio-sub">
           From idea to posted TikTok: you create the video and polish the script, a reviewer
           approves via magic link, the pipeline generates voiceover, avatar, B-roll and the final
           render automatically, and the post is scheduled for you.
@@ -77,7 +77,7 @@ export default function GuidePage() {
           <a
             key={s.id}
             href={`#${s.id}`}
-            className="rounded-full border border-neutral-700 px-2.5 py-1 text-neutral-300 hover:border-yellow-400 hover:text-yellow-300"
+            className="rounded-full border border-studio-border-strong px-2.5 py-1 text-studio-sub hover:border-studio-accent hover:text-studio-accent"
           >
             {s.n} · {s.title}
           </a>
@@ -87,34 +87,34 @@ export default function GuidePage() {
       <Section id="setup" n={1} title="One-time setup — before your first video">
         <p className={P}>
           Everything brand-specific lives in{' '}
-          <Link href="/settings" className="text-yellow-400 hover:underline">
+          <Link href="/settings" className="text-studio-accent hover:underline">
             Settings
           </Link>
           . Generation refuses to run until the four brand assets exist:
         </p>
         <ul className="list-disc space-y-1 pl-4">
           <li className={LI}>
-            <b className="text-neutral-300">Brand name</b> — shown in the header, favicon and
+            <b className="text-studio-bright">Brand name</b> — shown in the header, favicon and
             client review pages.
           </li>
           <li className={LI}>
-            <b className="text-neutral-300">Brand assets</b> — avatar reference (silent
+            <b className="text-studio-bright">Brand assets</b> — avatar reference (silent
             talking-pose video of the presenter), transparent logo PNG, 1080×1920 outro card, and
             BGM MP3. Mark one of each as default.
           </li>
           <li className={LI}>
-            <b className="text-neutral-300">HeyGen voice</b> — press{' '}
+            <b className="text-studio-bright">HeyGen voice</b> — press{' '}
             <Btn>Load English voices</Btn>, pick one, save.
           </li>
           <li className={LI}>
-            <b className="text-neutral-300">Script prompt</b> — fill in the ABOUT YOUR BRAND
+            <b className="text-studio-bright">Script prompt</b> — fill in the ABOUT YOUR BRAND
             block (presenter, audience, offer, boundaries). Biggest lever on script quality.
           </li>
           <li className={LI}>
-            <b className="text-neutral-300">Caption prompt</b> — your hashtags and local tags.
+            <b className="text-studio-bright">Caption prompt</b> — your hashtags and local tags.
           </li>
           <li className={LI}>
-            <b className="text-neutral-300">Video layout</b> — optional: logo position, subtitle
+            <b className="text-studio-bright">Video layout</b> — optional: logo position, subtitle
             size, presenter bubble. Defaults are sensible.
           </li>
         </ul>
@@ -145,17 +145,17 @@ export default function GuidePage() {
         </p>
         <ul className="list-disc space-y-1 pl-4">
           <li className={LI}>
-            <b className="text-neutral-300">Edit by hand</b>, then <Btn>Save as new version</Btn> —
+            <b className="text-studio-bright">Edit by hand</b>, then <Btn>Save as new version</Btn> —
             old versions are kept in Version history.
           </li>
           <li className={LI}>
-            <b className="text-neutral-300">Revise with Claude</b> — type instructions
+            <b className="text-studio-bright">Revise with Claude</b> — type instructions
             (&ldquo;make the hook more controversial&rdquo;) and press{' '}
             <Btn>Regenerate (revise current)</Btn>. Unresolved reviewer comments are included
             automatically.
           </li>
           <li className={LI}>
-            <b className="text-neutral-300">Start over</b> — <Btn>Regenerate from scratch</Btn>{' '}
+            <b className="text-studio-bright">Start over</b> — <Btn>Regenerate from scratch</Btn>{' '}
             ignores the current draft.
           </li>
         </ul>
@@ -246,13 +246,13 @@ export default function GuidePage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-neutral-800 text-neutral-500">
+              <tr className="border-b border-studio font-mono text-[10px] uppercase tracking-wide text-studio-muted">
                 <th className="py-1.5 pr-4 font-medium">Column</th>
                 <th className="py-1.5 pr-4 font-medium">Who acts</th>
                 <th className="py-1.5 font-medium">What to do</th>
               </tr>
             </thead>
-            <tbody className="text-neutral-400">
+            <tbody className="text-studio-sub">
               {(
                 [
                   ['Scripting', 'You', 'Write / regenerate the script, then send for review'],
@@ -265,8 +265,8 @@ export default function GuidePage() {
                   ['Failed', 'You', 'Read the error, fix the cause, retry failed jobs'],
                 ] as const
               ).map(([col, who, what]) => (
-                <tr key={col} className="border-b border-neutral-800/60">
-                  <td className="py-1.5 pr-4 whitespace-nowrap text-neutral-200">{col}</td>
+                <tr key={col} className="border-b border-studio/60">
+                  <td className="py-1.5 pr-4 whitespace-nowrap text-studio-bright">{col}</td>
                   <td className="py-1.5 pr-4 whitespace-nowrap">{who}</td>
                   <td className="py-1.5">{what}</td>
                 </tr>

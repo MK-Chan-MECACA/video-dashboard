@@ -44,8 +44,8 @@ const TOOLS: { name: string; readOnly: boolean; desc: string }[] = [
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-      <h2 className="text-sm font-semibold text-neutral-300">{title}</h2>
+    <section className="space-y-3 rounded-[12px] border border-studio bg-studio-card p-5">
+      <h2 className="text-sm font-semibold text-studio-sub">{title}</h2>
       {children}
     </section>
   );
@@ -56,8 +56,9 @@ export default function DocsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">API &amp; MCP</h1>
-        <p className="mt-1 text-sm text-neutral-400">
+        <div className="studio-eyebrow mb-2">Developer</div>
+        <h1 className="text-2xl font-semibold tracking-tight text-studio-bright">API &amp; MCP</h1>
+        <p className="mt-1.5 text-sm text-studio-sub">
           Connect third-party tools and AI agents to the video pipeline. Everything the dashboard
           can do — create videos, write and approve scripts, trigger renders, download finished
           videos — is available programmatically.
@@ -65,9 +66,9 @@ export default function DocsPage() {
       </div>
 
       <Section title="1 · Get an API key">
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-studio-muted">
           Create a key in{' '}
-          <Link href="/settings" className="text-yellow-400 hover:underline">
+          <Link href="/settings" className="text-studio-accent hover:underline">
             Settings → API keys
           </Link>
           . The full key (<code>ttm_live_…</code>) is shown once — store it like a password. Keys
@@ -78,8 +79,8 @@ export default function DocsPage() {
       </Section>
 
       <Section title="2 · REST API">
-        <p className="text-xs text-neutral-500">
-          Base URL: <code className="text-neutral-300">{base}/api/v1</code> — errors come back as
+        <p className="text-xs text-studio-muted">
+          Base URL: <code className="text-studio-text">{base}/api/v1</code> — errors come back as
           JSON <code>{'{ "error": "message" }'}</code> with a meaningful HTTP status.
         </p>
         <CodeBlock
@@ -99,7 +100,7 @@ curl -H "Authorization: Bearer $KEY" ${base}/api/v1/videos/$ID`}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-neutral-800 text-neutral-500">
+              <tr className="border-b border-studio font-mono text-[10px] uppercase tracking-wide text-studio-muted">
                 <th className="py-1.5 pr-3 font-medium">Method</th>
                 <th className="py-1.5 pr-3 font-medium">Path</th>
                 <th className="py-1.5 pr-3 font-medium">Scope</th>
@@ -108,30 +109,40 @@ curl -H "Authorization: Bearer $KEY" ${base}/api/v1/videos/$ID`}
             </thead>
             <tbody>
               {ENDPOINTS.map((e) => (
-                <tr key={`${e.method} ${e.path}`} className="border-b border-neutral-800/60 align-top">
-                  <td className="py-1.5 pr-3 font-mono text-yellow-400">{e.method}</td>
-                  <td className="whitespace-nowrap py-1.5 pr-3 font-mono text-neutral-300">{e.path}</td>
+                <tr key={`${e.method} ${e.path}`} className="border-b border-studio/60 align-top">
+                  <td
+                    className={`py-1.5 pr-3 font-mono ${
+                      e.method === 'GET'
+                        ? 'text-emerald-400'
+                        : e.method === 'DELETE'
+                          ? 'text-red-400'
+                          : 'text-studio-accent'
+                    }`}
+                  >
+                    {e.method}
+                  </td>
+                  <td className="whitespace-nowrap py-1.5 pr-3 font-mono text-studio-text">{e.path}</td>
                   <td className="py-1.5 pr-3">
                     <span className={e.scope === 'write' ? 'text-orange-400' : 'text-emerald-400'}>
                       {e.scope}
                     </span>
                   </td>
-                  <td className="py-1.5 text-neutral-400">{e.desc}</td>
+                  <td className="py-1.5 text-studio-sub">{e.desc}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-neutral-600">
+        <p className="text-xs text-studio-faint">
           Asset download URLs are presigned and expire after 1 hour — re-fetch them, never store
           them.
         </p>
       </Section>
 
       <Section title="3 · MCP for AI agents (remote)">
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-studio-muted">
           The dashboard serves a Streamable HTTP MCP server at{' '}
-          <code className="text-neutral-300">{base}/api/mcp</code>, authenticated with the same API
+          <code className="text-studio-text">{base}/api/mcp</code>, authenticated with the same API
           keys. It exposes 14 tools (below) that run the same code as the REST API.
         </p>
         <CodeBlock
@@ -139,7 +150,7 @@ curl -H "Authorization: Bearer $KEY" ${base}/api/v1/videos/$ID`}
           code={`claude mcp add --transport http ttm ${base}/api/mcp \\
   --header "Authorization: Bearer ttm_live_…"`}
         />
-        <p className="text-xs text-neutral-600">
+        <p className="text-xs text-studio-faint">
           Works with Claude Code, the Claude Agent SDK, and the Messages API{' '}
           <code>mcp_servers</code> block (as <code>authorization_token</code>). claude.ai custom
           connectors expect OAuth and can&apos;t use a static bearer key — use the local stdio
@@ -148,7 +159,7 @@ curl -H "Authorization: Bearer $KEY" ${base}/api/v1/videos/$ID`}
       </Section>
 
       <Section title="4 · MCP local (stdio)">
-        <p className="text-xs text-neutral-500">
+        <p className="text-xs text-studio-muted">
           The <code>ttm-video-mcp</code> package (in <code>packages/mcp-stdio</code>) runs locally
           and proxies this dashboard&apos;s REST API. Build once with{' '}
           <code>pnpm --filter ttm-video-mcp build</code>, then add to any MCP client:
@@ -181,7 +192,7 @@ curl -H "Authorization: Bearer $KEY" ${base}/api/v1/videos/$ID`}
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-neutral-800 text-neutral-500">
+              <tr className="border-b border-studio font-mono text-[10px] uppercase tracking-wide text-studio-muted">
                 <th className="py-1.5 pr-3 font-medium">Tool</th>
                 <th className="py-1.5 pr-3 font-medium">Access</th>
                 <th className="py-1.5 font-medium">Description</th>
@@ -189,52 +200,52 @@ curl -H "Authorization: Bearer $KEY" ${base}/api/v1/videos/$ID`}
             </thead>
             <tbody>
               {TOOLS.map((t) => (
-                <tr key={t.name} className="border-b border-neutral-800/60 align-top">
-                  <td className="whitespace-nowrap py-1.5 pr-3 font-mono text-neutral-300">{t.name}</td>
+                <tr key={t.name} className="border-b border-studio/60 align-top">
+                  <td className="whitespace-nowrap py-1.5 pr-3 font-mono text-studio-text">{t.name}</td>
                   <td className="py-1.5 pr-3">
                     <span className={t.readOnly ? 'text-emerald-400' : 'text-orange-400'}>
                       {t.readOnly ? 'read' : 'write'}
                     </span>
                   </td>
-                  <td className="py-1.5 text-neutral-400">{t.desc}</td>
+                  <td className="py-1.5 text-studio-sub">{t.desc}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="text-xs text-neutral-600">Read-only keys can only call the read tools.</p>
+        <p className="text-xs text-studio-faint">Read-only keys can only call the read tools.</p>
       </Section>
 
       <Section title="6 · Typical agent workflow">
-        <ol className="list-decimal space-y-1.5 pl-5 text-xs text-neutral-400">
+        <ol className="list-decimal space-y-1.5 pl-5 text-xs text-studio-sub">
           <li>
-            <code className="text-neutral-300">create_video</code> with{' '}
+            <code className="text-studio-text">create_video</code> with{' '}
             <code>{'{ title, topic_brief, generate: true }'}</code> — returns the video and the
             first Claude-written script.
           </li>
           <li>
-            Refine with <code className="text-neutral-300">save_script</code> or{' '}
-            <code className="text-neutral-300">regenerate_script</code> <code>{'{ instructions }'}</code>.
+            Refine with <code className="text-studio-text">save_script</code> or{' '}
+            <code className="text-studio-text">regenerate_script</code> <code>{'{ instructions }'}</code>.
           </li>
           <li>
-            <code className="text-neutral-300">video_action</code>{' '}
+            <code className="text-studio-text">video_action</code>{' '}
             <code>{'{ action: "send_for_review" }'}</code>, then either{' '}
-            <code className="text-neutral-300">create_review_link</code> (human approves) or{' '}
-            <code className="text-neutral-300">review_decision</code> (agent approves).
+            <code className="text-studio-text">create_review_link</code> (human approves) or{' '}
+            <code className="text-studio-text">review_decision</code> (agent approves).
           </li>
           <li>
             Script approval starts voice → avatar → B-roll → render automatically. Poll{' '}
-            <code className="text-neutral-300">get_video</code> until status is{' '}
+            <code className="text-studio-text">get_video</code> until status is{' '}
             <code>video_review</code>.
           </li>
           <li>
-            Watch the result via <code className="text-neutral-300">get_asset_url</code>, then{' '}
-            <code className="text-neutral-300">review_decision</code>{' '}
+            Watch the result via <code className="text-studio-text">get_asset_url</code>, then{' '}
+            <code className="text-studio-text">review_decision</code>{' '}
             <code>{'{ kind: "video", decision: "approved" }'}</code> — caption is written and the
             post is scheduled via GoHighLevel.
           </li>
         </ol>
-        <p className="text-xs text-neutral-600">
+        <p className="text-xs text-studio-faint">
           Pipeline statuses: draft → script_review → voice_generating → avatar_generating →
           scenes_generating → rendering → video_review → approved → scheduled → posted (failures
           land in <code>failed</code> with <code>status_error</code>; use{' '}

@@ -16,12 +16,13 @@ export default async function NewVideoPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-4 text-xl font-semibold">New Video</h1>
+      <div className="studio-eyebrow mb-2">New video</div>
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight text-studio-bright">New Video</h1>
       <AiScriptGenerator fields={fields} />
-      <div className="my-6 flex items-center gap-3 text-xs text-neutral-600">
-        <div className="h-px flex-1 bg-neutral-800" />
+      <div className="my-6 flex items-center gap-3 text-xs text-studio-faint">
+        <div className="h-px flex-1 bg-studio-border" />
         or create manually
-        <div className="h-px flex-1 bg-neutral-800" />
+        <div className="h-px flex-1 bg-studio-border" />
       </div>
       <NewVideoManualForm />
     </div>

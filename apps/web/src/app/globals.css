@@ -1,9 +1,110 @@
 @import 'tailwindcss';
 
+@theme {
+  /* Palette (generates bg-studio-*, text-studio-*, border-studio-* utilities) */
+  --color-studio-bg: #0e0d0b;            /* app background */
+  --color-studio-card: #151310;          /* section cards, header */
+  --color-studio-panel: #0e0d0b;         /* deep surface (board column, with border) */
+  --color-studio-inset: #161410;         /* input/select/textarea fill, chips */
+  --color-studio-code: #0a0908;          /* code/pre/prompt textareas */
+  --color-studio-border: #2a2723;        /* default border, scrollbar thumb */
+  --color-studio-border-strong: #322e28; /* input borders */
+  --color-studio-border-hover: #4a4238;  /* hover border */
+  --color-studio-accent: #e9b949;
+  --color-studio-on-accent: #1c1810;
+  --color-studio-text: #f2ede4;
+  --color-studio-bright: #faf6ee;
+  --color-studio-sub: #a39a8c;
+  --color-studio-muted: #8f887b;
+  --color-studio-faint: #5f5a51;
+
+  /* Fonts — reference the CSS vars injected by next/font in layout.tsx */
+  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
 :root {
   color-scheme: dark;
 }
 
 body {
-  @apply bg-neutral-950 text-neutral-100 antialiased;
+  @apply bg-studio-bg text-studio-text antialiased;
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: #e9b949;
+  color: #1c1810;
+}
+
+/* Custom scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2723 transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: #2a2723;
+  border-radius: 9999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #322e28;
+}
+
+@layer base {
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  button:focus-visible,
+  a:focus-visible {
+    outline: none;
+    border-color: #e9b949;
+    box-shadow: 0 0 0 1px rgba(233, 185, 73, 0.35);
+  }
+}
+
+@layer components {
+  /* Card hover-lift — for draggable board cards and interactive tiles */
+  .studio-card {
+    transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  }
+  .studio-card:hover {
+    transform: translateY(-1px);
+    border-color: #4a4238;
+  }
+
+  /* Button brightness-hover helper (accent +8%) */
+  .studio-lift {
+    transition: filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  }
+  .studio-lift:hover {
+    filter: brightness(1.08);
+  }
+
+  /* Sticky translucent header */
+  .studio-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    height: 56px;
+    background: rgba(14, 13, 11, 0.86);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid #201d18;
+  }
+
+  /* Mono eyebrow label helper */
+  .studio-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #e9b949;
+  }
 }

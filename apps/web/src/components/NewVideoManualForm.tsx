@@ -28,18 +28,18 @@ export default function NewVideoManualForm() {
   }
 
   return (
-    <div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-900 p-6">
+    <div className="space-y-4 rounded-[16px] border border-studio bg-studio-card p-6">
       <div>
-        <label className="mb-1 block text-sm text-neutral-400">Working title</label>
+        <label className="mb-1 block text-sm text-studio-sub">Working title</label>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. The X-Ray Differentiator"
-          className="w-full rounded border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm"
+          className="w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm text-neutral-400">
+        <label className="mb-1 block text-sm text-studio-sub">
           Topic brief — what should this video be about?
         </label>
         <textarea
@@ -47,7 +47,7 @@ export default function NewVideoManualForm() {
           onChange={(e) => setBrief(e.target.value)}
           rows={6}
           placeholder="e.g. Myth-bust a habit your audience thinks is harmless, then position your service as the proper fix."
-          className="w-full rounded border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm"
+          className="w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
         />
       </div>
       {error && <p className="text-sm text-red-400">{error}</p>}
@@ -55,14 +55,14 @@ export default function NewVideoManualForm() {
         <button
           disabled={busy || !title || !brief}
           onClick={() => submit(true)}
-          className="rounded bg-yellow-400 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-300 disabled:opacity-50"
+          className="studio-lift rounded-[9px] bg-studio-accent px-4 py-2 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
         >
           {busy ? 'Working…' : 'Create + Generate Script'}
         </button>
         <button
           disabled={busy || !title}
           onClick={() => submit(false)}
-          className="rounded border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800 disabled:opacity-50"
+          className="rounded-[9px] border border-studio-border-strong px-4 py-2 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
         >
           Create empty
         </button>

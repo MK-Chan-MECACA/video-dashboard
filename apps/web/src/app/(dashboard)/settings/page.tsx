@@ -50,16 +50,13 @@ export default async function SettingsPage() {
   );
 
   return (
-    <>
-      <SettingsClient
-        brandAssets={brandAssetRows as BrandAssetRow[]}
-        settings={Object.fromEntries((settings ?? []).map((r) => [r.key, r.value]))}
-        defaultScriptPrompt={DEFAULT_SCRIPT_SYSTEM}
-        defaultCaptionPrompt={DEFAULT_CAPTION_SYSTEM}
-      />
-      <div className="mx-auto mt-6 max-w-3xl">
-        <ApiKeysSection apiKeys={(apiKeys ?? []) as ApiKeyRow[]} />
-      </div>
-    </>
+    <SettingsClient
+      brandAssets={brandAssetRows as BrandAssetRow[]}
+      settings={Object.fromEntries((settings ?? []).map((r) => [r.key, r.value]))}
+      defaultScriptPrompt={DEFAULT_SCRIPT_SYSTEM}
+      defaultCaptionPrompt={DEFAULT_CAPTION_SYSTEM}
+    >
+      <ApiKeysSection apiKeys={(apiKeys ?? []) as ApiKeyRow[]} />
+    </SettingsClient>
   );
 }

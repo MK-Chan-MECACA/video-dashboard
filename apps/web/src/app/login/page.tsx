@@ -30,8 +30,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto mt-24 max-w-sm rounded-lg border border-neutral-800 bg-neutral-900 p-6">
-      <h1 className="mb-4 text-lg font-semibold">Operator login</h1>
+    <div className="mx-auto mt-24 max-w-sm rounded-[14px] border border-studio bg-studio-card p-6">
+      <h1 className="mb-4 text-lg font-semibold text-studio-bright">Operator login</h1>
       <form onSubmit={submit} className="space-y-3">
         <input
           type="email"
@@ -39,7 +39,7 @@ export default function LoginPage() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm"
+          className="w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
         />
         <input
           type="password"
@@ -47,17 +47,17 @@ export default function LoginPage() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm"
+          className="w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
         />
         {error && <p className="text-sm text-red-400">{error}</p>}
         <button
           disabled={busy}
-          className="w-full rounded bg-yellow-400 px-3 py-2 text-sm font-semibold text-black hover:bg-yellow-300 disabled:opacity-50"
+          className="studio-lift w-full rounded-[9px] bg-studio-accent px-3 py-2 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
         >
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
-      <p className="mt-3 text-xs text-neutral-500">
+      <p className="mt-3 text-xs text-studio-muted">
         Create the operator account in Supabase → Authentication → Users.
       </p>
     </div>

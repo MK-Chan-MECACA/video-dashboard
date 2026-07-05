@@ -61,15 +61,15 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
   const activeLinks = links.filter((l) => !l.revoked && new Date(l.expires_at) > new Date());
 
   return (
-    <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
-      <h2 className="mb-3 text-sm font-semibold text-neutral-300">Actions</h2>
+    <section className="rounded-[12px] border border-studio bg-studio-card p-4">
+      <h2 className="mb-3 text-sm font-semibold text-studio-sub">Actions</h2>
 
       <div className="flex flex-wrap gap-2">
         {(video.status === 'draft' || video.status === 'script_changes_requested') && (
           <button
             onClick={() => act('send_for_review')}
             disabled={!!busy}
-            className="rounded bg-yellow-400 px-3 py-1.5 text-sm font-semibold text-black hover:bg-yellow-300 disabled:opacity-50"
+            className="studio-lift rounded-[9px] bg-studio-accent px-3 py-1.5 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
           >
             Send script for review
           </button>
@@ -77,14 +77,14 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
         <button
           onClick={() => createLink('script')}
           disabled={!!busy}
-          className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+          className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
         >
           Create script review link
         </button>
         <button
           onClick={() => createLink('video')}
           disabled={!!busy}
-          className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+          className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
         >
           Create video review link
         </button>
@@ -92,7 +92,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
           <button
             onClick={() => act('retry_failed')}
             disabled={!!busy}
-            className="rounded bg-red-800 px-3 py-1.5 text-sm font-semibold hover:bg-red-700 disabled:opacity-50"
+            className="studio-lift rounded-[9px] bg-red-800 px-3 py-1.5 text-sm font-semibold hover:bg-red-700 disabled:opacity-50"
           >
             Retry failed jobs
           </button>
@@ -102,7 +102,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
             <button
               onClick={() => act('regenerate_avatar')}
               disabled={!!busy}
-              className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+              className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
             >
               Regenerate avatar
             </button>
@@ -111,7 +111,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
                 key={i}
                 onClick={() => act('regenerate_scene', { scene_index: i })}
                 disabled={!!busy}
-                className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+                className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
               >
                 Regen scene {i}
               </button>
@@ -119,7 +119,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
             <button
               onClick={() => act('re_render')}
               disabled={!!busy}
-              className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+              className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
             >
               Re-render
             </button>
@@ -128,33 +128,33 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
       </div>
 
       {newLink && (
-        <p className="mt-3 break-all rounded bg-neutral-950 p-2 text-xs text-emerald-300">
+        <p className="mt-3 break-all rounded-[8px] bg-studio-code p-2 text-xs text-emerald-300">
           Link copied to clipboard: {newLink}
         </p>
       )}
 
       {activeLinks.length > 0 && (
-        <div className="mt-3 text-xs text-neutral-400">
+        <div className="mt-3 text-xs text-studio-sub">
           Active review links: {activeLinks.map((l) => l.kind).join(', ')} (tokens are only shown
           once at creation)
         </div>
       )}
 
-      <div className="mt-4 space-y-2 border-t border-neutral-800 pt-4">
-        <label className="block text-xs text-neutral-400">Post caption</label>
+      <div className="mt-4 space-y-2 border-t border-studio pt-4">
+        <label className="block text-xs text-studio-sub">Post caption</label>
         <textarea
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
           rows={4}
           placeholder="Generated automatically after video approval — you can override it here."
-          className="w-full rounded border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm"
+          className="w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
         />
-        <label className="block text-xs text-neutral-400">Schedule time (defaults to 7 PM MYT next day)</label>
+        <label className="block text-xs text-studio-sub">Schedule time (defaults to 7 PM MYT next day)</label>
         <input
           type="datetime-local"
           value={scheduleAt}
           onChange={(e) => setScheduleAt(e.target.value)}
-          className="rounded border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm"
+          className="rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
         />
         <div>
           <button
@@ -165,7 +165,7 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
               })
             }
             disabled={!!busy}
-            className="rounded border border-neutral-700 px-3 py-1.5 text-sm hover:bg-neutral-800 disabled:opacity-50"
+            className="rounded-[9px] border border-studio-border-strong px-3 py-1.5 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
           >
             Save caption & schedule
           </button>

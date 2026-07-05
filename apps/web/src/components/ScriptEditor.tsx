@@ -142,15 +142,15 @@ export function ScriptEditor({
     rows?: number;
   }) => (
     <div>
-      <label className="mb-1 block text-sm font-semibold text-yellow-400">{label}</label>
+      <label className="mb-1 block text-sm font-semibold text-studio-accent">{label}</label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={rows}
-        className="w-full rounded border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm"
+        className="w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
       />
       {commentsFor(sectionKey).map((c) => (
-        <p key={c.id} className="mt-1 rounded bg-orange-950 px-2 py-1 text-xs text-orange-200">
+        <p key={c.id} className="mt-1 rounded-[6px] bg-orange-950 px-2 py-1 text-xs text-orange-200">
           💬 <b>{c.author_name}:</b> {c.body}
         </p>
       ))}
@@ -160,17 +160,17 @@ export function ScriptEditor({
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <div className="flex items-center gap-3">
-        <Link href={`/videos/${video.id}`} className="text-sm text-neutral-400 hover:text-white">
+        <Link href={`/videos/${video.id}`} className="text-sm text-studio-sub hover:text-studio-bright">
           ← {video.video_no ? `V${video.video_no} · ` : ''}{video.title}
         </Link>
         <StatusBadge status={video.status} />
-        <span className="ml-auto text-xs text-neutral-500">
+        <span className="ml-auto text-xs text-studio-muted">
           {current ? `v${current.version} (${current.created_by})` : 'no version yet'} ·{' '}
           {wordCount} words spoken
         </span>
       </div>
 
-      <div className="space-y-4 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
+      <div className="space-y-4 rounded-[12px] border border-studio bg-studio-card p-5">
         <Section
           label="Hook"
           sectionKey="hook"
@@ -178,7 +178,7 @@ export function ScriptEditor({
           onChange={(v) => setScript((s) => ({ ...s, hook: v }))}
         />
         {script.scenes.map((scene) => (
-          <div key={scene.index} className="space-y-2 rounded border border-neutral-800 p-3">
+          <div key={scene.index} className="space-y-2 rounded-[8px] border border-studio p-3">
             <Section
               label={`${sceneCode(video.video_no, scene.index)} — voiceover`}
               sectionKey={`scene_${scene.index}`}
@@ -186,20 +186,20 @@ export function ScriptEditor({
               onChange={(v) => setScene(scene.index, { voiceover: v })}
             />
             <div>
-              <label className="mb-1 block text-xs text-neutral-400">B-roll prompt</label>
+              <label className="mb-1 block text-xs text-studio-sub">B-roll prompt</label>
               <textarea
                 value={scene.broll_prompt}
                 onChange={(e) => setScene(scene.index, { broll_prompt: e.target.value })}
                 rows={2}
-                className="w-full rounded border border-neutral-700 bg-neutral-800 px-3 py-2 text-xs"
+                className="w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-xs"
               />
             </div>
             <div>
-              <label className="mb-1 block text-xs text-neutral-400">Video model</label>
+              <label className="mb-1 block text-xs text-studio-sub">Video model</label>
               <select
                 value={scene.model_path}
                 onChange={(e) => setScene(scene.index, { model_path: e.target.value })}
-                className="rounded border border-neutral-700 bg-neutral-800 px-2 py-1 text-xs"
+                className="rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1 text-xs"
               >
                 {allModelOptions.map((m) => (
                   <option key={m.value} value={m.value}>
@@ -218,8 +218,8 @@ export function ScriptEditor({
         />
       </div>
 
-      <div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-        <label className="block text-sm text-neutral-400">
+      <div className="space-y-3 rounded-[12px] border border-studio bg-studio-card p-5">
+        <label className="block text-sm text-studio-sub">
           Regeneration instructions (unresolved reviewer comments are included automatically)
         </label>
         <textarea
@@ -227,34 +227,34 @@ export function ScriptEditor({
           onChange={(e) => setInstructions(e.target.value)}
           rows={2}
           placeholder="e.g. Make the hook more controversial, mention office workers"
-          className="w-full rounded border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm"
+          className="w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
         />
         <div className="flex flex-wrap gap-2">
           <button
             onClick={save}
             disabled={!!busy}
-            className="rounded border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800 disabled:opacity-50"
+            className="rounded-[9px] border border-studio-border-strong px-4 py-2 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
           >
             {busy === 'save' ? 'Saving…' : 'Save as new version'}
           </button>
           <button
             onClick={() => regenerate(false)}
             disabled={!!busy}
-            className="rounded border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800 disabled:opacity-50"
+            className="rounded-[9px] border border-studio-border-strong px-4 py-2 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
           >
             {busy === 'regen' ? 'Generating…' : 'Regenerate (revise current)'}
           </button>
           <button
             onClick={() => regenerate(true)}
             disabled={!!busy}
-            className="rounded border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800 disabled:opacity-50"
+            className="rounded-[9px] border border-studio-border-strong px-4 py-2 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
           >
             Regenerate from scratch
           </button>
           <button
             onClick={sendForReview}
             disabled={!!busy || !script.hook}
-            className="ml-auto rounded bg-yellow-400 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-300 disabled:opacity-50"
+            className="studio-lift ml-auto rounded-[9px] bg-studio-accent px-4 py-2 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
           >
             {busy === 'review' ? 'Sending…' : 'Save + Send for review'}
           </button>
@@ -263,9 +263,9 @@ export function ScriptEditor({
       </div>
 
       {versions.length > 1 && (
-        <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-5">
-          <h2 className="mb-2 text-sm font-semibold text-neutral-300">Version history</h2>
-          <ul className="space-y-1 text-xs text-neutral-400">
+        <div className="rounded-[12px] border border-studio bg-studio-card p-5">
+          <h2 className="mb-2 text-sm font-semibold text-studio-sub">Version history</h2>
+          <ul className="space-y-1 text-xs text-studio-sub">
             {versions.map((v) => (
               <li key={v.id}>
                 v{v.version} — {v.created_by} — {new Date(v.created_at).toLocaleString()}
