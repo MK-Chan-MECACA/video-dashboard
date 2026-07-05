@@ -71,6 +71,8 @@ Everything brand-specific is data, not code. After deploying, open **Settings** 
 
 `seed-settings.example.mjs` shows how to seed all of this from a script instead of clicking through the UI.
 
+Want different dashboard colors? The whole UI theme is ~15 design tokens (Tailwind v4 `@theme`) at the top of [`apps/web/src/app/globals.css`](apps/web/src/app/globals.css) — change `--color-studio-accent` and friends and every screen follows. Status-pill colors live in [`StatusBadge.tsx`](apps/web/src/components/StatusBadge.tsx).
+
 ## Why it exists
 
 Presenter-led short-form video works, but the production loop — script, record, edit, subtitle, schedule, chase approvals — eats hours per video. This collapses the loop to two client taps: approve the script, approve the cut. It was built to run a real brand's channel at 8+ videos a week and then open-sourced with the branding stripped out.
