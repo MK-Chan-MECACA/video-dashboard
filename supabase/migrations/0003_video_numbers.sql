@@ -8,7 +8,7 @@ with ordered as (
 update videos v set video_no = o.rn from ordered o where v.id = o.id;
 
 create sequence videos_video_no_seq;
-select setval('videos_video_no_seq', coalesce((select max(video_no) from videos), 0));
+select setval('videos_video_no_seq', greatest(coalesce((select max(video_no) from videos), 1), 1), (select count(*) > 0 from videos));
 
 alter table videos alter column video_no set not null;
 alter table videos alter column video_no set default nextval('videos_video_no_seq');
