@@ -28,11 +28,23 @@ export class HeyGenClient {
     };
   }
 
+  /**
+   * v3 voices only: generateSpeech below runs on HeyGen's v3 ("Starfish")
+   * engine, and the much larger /v2/voices catalog is mostly voices that
+   * engine rejects with "Voice engine VoiceProvider.STARFISH is not
+   * supported for voice ...".
+   */
   async listVoices(): Promise<HeyGenVoice[]> {
-    const res = await fetch(`${BASE}/v2/voices`, { headers: this.headers() });
+    const res = await fetch(`${BASE}/v3/voices`, { headers: this.headers() });
     if (!res.ok) throw new Error(`HeyGen listVoices ${res.status}: ${await res.text()}`);
-    const json = (await res.json()) as { data?: { voices?: HeyGenVoice[] } };
-    return json.data?.voices ?? [];
+    const json = (await res.json()) as { data?: Array<Record<string, unknown>> };
+    return (json.data ?? []).map((v) => ({
+      voice_id: String(v.voice_id ?? ''),
+      name: String(v.name ?? '').trim(),
+      language: String(v.language ?? ''),
+      gender: String(v.gender ?? ''),
+      preview_audio: (v.preview_audio_url ?? v.preview_audio) as string | undefined,
+    }));
   }
 
   /**

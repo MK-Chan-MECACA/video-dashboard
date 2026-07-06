@@ -512,17 +512,13 @@ export async function applyReviewDecision(
   }
 
   if (opts.kind === 'script') {
-    // Approved script → start generation. Voice comes from settings; worker consumes payload.
-    const { data: voiceSetting } = await db
-      .from('app_settings')
-      .select('value')
-      .eq('key', 'heygen_voice_id')
-      .maybeSingle();
+    // Approved script → start generation. The worker resolves the voice from
+    // settings at run time, so a retry after a voice change uses the new voice.
     await db.from('videos').update({ status: 'voice_generating' }).eq('id', videoId);
     await db.from('jobs').insert({
       video_id: videoId,
       type: 'tts',
-      payload: { voice_id: voiceSetting?.value ?? null },
+      payload: {},
     });
     await db.from('pipeline_events').insert({
       video_id: videoId,

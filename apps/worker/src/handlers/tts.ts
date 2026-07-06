@@ -9,6 +9,7 @@ import { heygen, r2 } from '../clients';
 import {
   completeJob,
   enqueueJob,
+  getAppSetting,
   getScriptVersion,
   getVideo,
   insertAsset,
@@ -27,8 +28,14 @@ export async function handleTts(job: Job): Promise<void> {
   const text = fullVoiceoverText(script);
   if (!text) throw new Error(`Script ${sv.id} produced empty voiceover text`);
 
-  const voiceId = (job.payload.voice_id as string | undefined) ?? optionalEnv('HEYGEN_VOICE_ID');
-  if (!voiceId) throw new Error('No voice_id in job payload and HEYGEN_VOICE_ID is not set');
+  // Resolve the voice at run time, settings first: a payload voice_id is only
+  // a stale settings snapshot from the old approval flow, and reading the live
+  // setting lets "Retry failed" pick up a voice changed after the failure.
+  const voiceId =
+    ((await getAppSetting('heygen_voice_id')) as string | null) ??
+    (job.payload.voice_id as string | undefined) ??
+    optionalEnv('HEYGEN_VOICE_ID');
+  if (!voiceId) throw new Error('No voice_id in payload/settings and HEYGEN_VOICE_ID is not set');
 
   const speech = await heygen().generateSpeech({ text, voiceId });
   if (speech.wordTimestamps.length === 0) {
