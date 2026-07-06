@@ -100,6 +100,24 @@ export function BoardClient({
   const pendingReview = videos.filter(
     (v) => v.status === 'script_review' || v.status === 'video_review',
   );
+  const reviewGroups = [
+    {
+      key: 'script_review',
+      label: 'Scripts',
+      hint: 'Approve before we generate the video',
+      items: pendingReview
+        .filter((v) => v.status === 'script_review')
+        .sort((a, b) => a.video_no - b.video_no),
+    },
+    {
+      key: 'video_review',
+      label: 'Final videos',
+      hint: 'Approve before we schedule posting',
+      items: pendingReview
+        .filter((v) => v.status === 'video_review')
+        .sort((a, b) => a.video_no - b.video_no),
+    },
+  ].filter((g) => g.items.length > 0);
   const attention = [
     {
       value: String(inReviewCount),
@@ -178,26 +196,48 @@ export function BoardClient({
       )}
 
       {readOnly && pendingReview.length > 0 && (
-        <div className="my-6 rounded-[12px] border border-[#3a2f16] bg-[linear-gradient(180deg,#1e1a10,#161410)] p-4">
-          <p className="mb-2.5 text-sm font-semibold text-studio-bright">
-            Pending your review — {pendingReview.length} video
-            {pendingReview.length === 1 ? '' : 's'}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {pendingReview.map((v) => (
-              <Link
-                key={v.id}
-                href={`/videos/${v.id}`}
-                className="studio-lift flex items-center gap-2 rounded-[9px] border border-studio-border-strong bg-studio-card px-3 py-2 text-[13px] text-studio-text"
-              >
-                {v.video_no && (
-                  <span className="font-mono text-xs text-studio-accent">V{v.video_no}</span>
-                )}
-                <span className="max-w-[260px] truncate">{v.title}</span>
-                <span className="rounded-[5px] bg-[#201d18] px-1.5 py-0.5 text-[10px] text-studio-sub">
-                  {v.status === 'script_review' ? 'script' : 'video'}
-                </span>
-              </Link>
+        <div className="my-6 rounded-[12px] border border-[#3a2f16] bg-[linear-gradient(180deg,#1e1a10,#161410)] p-5">
+          <div className="mb-4 flex items-center gap-2.5">
+            <span
+              className="h-2 w-2 rounded-full"
+              style={{ backgroundColor: '#e9b949', boxShadow: '0 0 0 4px rgba(233,185,73,.15)' }}
+            />
+            <p className="text-sm font-semibold text-studio-bright">Pending your review</p>
+            <span className="rounded-full bg-[#201d18] px-2 py-px text-[11px] text-studio-sub">
+              {pendingReview.length}
+            </span>
+          </div>
+          <div className={`grid gap-5 ${reviewGroups.length > 1 ? 'md:grid-cols-2' : ''}`}>
+            {reviewGroups.map((g) => (
+              <div key={g.key} className="min-w-0">
+                <div className="mb-2 flex items-baseline gap-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#d8cfbf]">
+                    {g.label} · {g.items.length}
+                  </p>
+                  <p className="truncate text-[11px] text-studio-faint">{g.hint}</p>
+                </div>
+                <div className="max-h-[248px] space-y-1.5 overflow-y-auto pr-1">
+                  {g.items.map((v) => (
+                    <Link
+                      key={v.id}
+                      href={`/videos/${v.id}`}
+                      className="group flex items-center gap-2.5 rounded-[9px] border border-studio-border-strong bg-studio-card px-3 py-2.5 transition-colors hover:border-[#3a2f16] hover:bg-[#17140d]"
+                    >
+                      {v.video_no && (
+                        <span className="w-8 shrink-0 font-mono text-xs text-studio-accent">
+                          V{v.video_no}
+                        </span>
+                      )}
+                      <span className="min-w-0 flex-1 truncate text-[13px] text-studio-text">
+                        {v.title}
+                      </span>
+                      <span className="shrink-0 text-xs text-studio-muted transition-colors group-hover:text-studio-accent">
+                        Review →
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>
