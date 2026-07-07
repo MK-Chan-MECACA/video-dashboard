@@ -1,6 +1,14 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import type { Asset, Job, ScriptVersion, Video } from '@vd/shared';
+import {
+  SPOKEN_WORDS_PER_SECOND,
+  resolveTargetDurationS,
+  wordBudgetForDuration,
+  type Asset,
+  type Job,
+  type ScriptVersion,
+  type Video,
+} from '@vd/shared';
 import { estimateVideoCost, formatUsd } from '@vd/shared/pricing';
 import { supabaseServer } from '@/lib/supabase';
 import { ScriptView } from '@/components/ScriptView';
@@ -18,7 +26,7 @@ export default async function VideoDetailPage({
   const { id } = await params;
   const supabase = await supabaseServer();
 
-  const [{ data: video }, { data: assets }, { data: jobs }, { data: links }, { data: events }, { data: comments }, { data: approvals }] =
+  const [{ data: video }, { data: assets }, { data: jobs }, { data: links }, { data: events }, { data: comments }, { data: approvals }, { data: targetSetting }] =
     await Promise.all([
       supabase.from('videos').select('*').eq('id', id).single(),
       supabase.from('assets').select('*').eq('video_id', id).order('created_at'),
@@ -27,6 +35,7 @@ export default async function VideoDetailPage({
       supabase.from('pipeline_events').select('*').eq('video_id', id).order('created_at', { ascending: false }).limit(30),
       supabase.from('review_comments').select('*').eq('video_id', id).order('created_at', { ascending: false }),
       supabase.from('approvals').select('*').eq('video_id', id).order('created_at', { ascending: false }),
+      supabase.from('app_settings').select('value').eq('key', 'target_duration_s').maybeSingle(),
     ]);
 
   if (!video) notFound();
@@ -62,6 +71,8 @@ export default async function VideoDetailPage({
         .split(/\s+/)
         .filter(Boolean).length
     : 0;
+  const targetDurationS = resolveTargetDurationS(targetSetting?.value);
+  const scriptOverTarget = spokenWords > Math.ceil(wordBudgetForDuration(targetDurationS) * 1.1);
 
   const hatch =
     'repeating-linear-gradient(135deg,#221d14,#221d14 6px,#1a160f 6px,#1a160f 12px)';
@@ -101,8 +112,14 @@ export default async function VideoDetailPage({
                   Script v{script.version}
                 </h2>
                 <span className="text-xs text-studio-muted">
-                  · v{script.version} ({script.created_by}) · {spokenWords} words spoken
+                  · v{script.version} ({script.created_by}) · {spokenWords} words spoken · ~
+                  {Math.round(spokenWords / SPOKEN_WORDS_PER_SECOND)}s
                 </span>
+                {scriptOverTarget && (
+                  <span className="text-xs text-red-400">
+                    ⚠ over the {targetDurationS}s target — regenerate or trim before approving
+                  </span>
+                )}
               </div>
               <ScriptView
                 hook={script.hook}

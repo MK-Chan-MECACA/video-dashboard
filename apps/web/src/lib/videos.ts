@@ -148,7 +148,7 @@ export async function createVideo(
   let script: ScriptVersion | null = null;
   if (opts.generate && opts.topic_brief?.trim()) {
     try {
-      const { systemPrompt, recentScripts } = await getScriptGenContext(db, {
+      const { systemPrompt, recentScripts, targetDurationS } = await getScriptGenContext(db, {
         excludeVideoId: video.id,
       });
       const generated = await generateScript({
@@ -156,6 +156,7 @@ export async function createVideo(
         topicBrief: opts.topic_brief,
         systemPrompt,
         recentScripts,
+        targetDurationS,
       });
       script = await saveScriptVersion(db, {
         videoId: video.id,
@@ -164,7 +165,13 @@ export async function createVideo(
         claudeModel: generated.model,
       });
       await db.from('videos').update({ status: 'draft' }).eq('id', video.id);
-      await logEvent(db, video.id, 'script_generated', { version: 1 });
+      await logEvent(db, video.id, 'script_generated', {
+        version: 1,
+        words: generated.wordCount,
+        estimated_s: Math.round(generated.estimatedDurationS),
+        target_s: targetDurationS,
+        condense_attempts: generated.condenseAttempts,
+      });
     } catch (e) {
       await db
         .from('videos')
@@ -185,13 +192,15 @@ export async function generateVideoFromDirection(
   db: SupabaseClient,
   direction: ScriptDirection = {},
 ): Promise<{ video: Video; script: ScriptVersion }> {
-  const { systemPrompt, recentScripts, allTitles } = await getScriptGenContext(db);
+  const { systemPrompt, recentScripts, allTitles, targetDurationS } =
+    await getScriptGenContext(db);
   const generated = await generateScript({
     apiKey: process.env.ANTHROPIC_API_KEY!,
     direction,
     avoidTitles: allTitles,
     systemPrompt,
     recentScripts,
+    targetDurationS,
   });
 
   const directionNote = [
@@ -221,7 +230,13 @@ export async function generateVideoFromDirection(
     createdBy: 'claude',
     claudeModel: generated.model,
   });
-  await logEvent(db, video.id, 'script_generated', { version: script.version });
+  await logEvent(db, video.id, 'script_generated', {
+    version: script.version,
+    words: generated.wordCount,
+    estimated_s: Math.round(generated.estimatedDurationS),
+    target_s: targetDurationS,
+    condense_attempts: generated.condenseAttempts,
+  });
 
   const { error: statusErr } = await db
     .from('videos')
@@ -392,7 +407,9 @@ export async function regenerateScript(
     .eq('resolved', false);
   const feedback = (comments ?? []).map((c) => `[${c.section_key}] ${c.body}`).join('\n');
 
-  const { systemPrompt, recentScripts } = await getScriptGenContext(db, { excludeVideoId: id });
+  const { systemPrompt, recentScripts, targetDurationS } = await getScriptGenContext(db, {
+    excludeVideoId: id,
+  });
   const script = await generateScript({
     apiKey: process.env.ANTHROPIC_API_KEY!,
     topicBrief: video.topic_brief ?? video.title,
@@ -402,6 +419,7 @@ export async function regenerateScript(
       .join('\n\n'),
     systemPrompt,
     recentScripts,
+    targetDurationS,
   });
   const version = await saveScriptVersion(db, {
     videoId: id,
@@ -412,7 +430,13 @@ export async function regenerateScript(
   if (video.status === 'script_generating' || video.status === 'script_changes_requested') {
     await db.from('videos').update({ status: 'draft' }).eq('id', id);
   }
-  await logEvent(db, id, 'script_regenerated', { version: version.version });
+  await logEvent(db, id, 'script_regenerated', {
+    version: version.version,
+    words: script.wordCount,
+    estimated_s: Math.round(script.estimatedDurationS),
+    target_s: targetDurationS,
+    condense_attempts: script.condenseAttempts,
+  });
   return version;
 }
 

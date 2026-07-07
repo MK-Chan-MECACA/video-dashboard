@@ -232,7 +232,7 @@ export const TOOL_DEFS: ToolDef[] = [
   {
     name: 'get_settings',
     description:
-      "Read app settings (voice id, prompts, render engine/template, brand name). picker fetches live external lists: 'voices' (HeyGen), 'scene_models' (WaveSpeed), 'ghl' (connected social accounts).",
+      "Read app settings (voice id, prompts, target duration, render engine/template, brand name). picker fetches live external lists: 'voices' (HeyGen), 'scene_models' (WaveSpeed), 'ghl' (connected social accounts).",
     inputSchema: {
       picker: z.enum(['voices', 'scene_models', 'ghl']).optional(),
     },
@@ -245,7 +245,7 @@ export const TOOL_DEFS: ToolDef[] = [
   {
     name: 'update_settings',
     description:
-      'Upsert app settings as key/value pairs (e.g. heygen_voice_id, script_system_prompt, caption_system_prompt, render_engine, brand_name).',
+      'Upsert app settings as key/value pairs (e.g. heygen_voice_id, script_system_prompt, caption_system_prompt, target_duration_s, target_duration_includes_outro, render_engine, brand_name).',
     inputSchema: {
       settings: z.record(z.unknown()).describe('Object of setting key → value'),
     },

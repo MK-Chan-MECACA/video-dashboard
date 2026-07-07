@@ -1,26 +1,54 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { fullVoiceoverText, type PastScript, type Script, type ScriptVersion } from '@vd/shared';
+import {
+  effectiveSpokenTargetS,
+  estimateOutroDurationS,
+  fullVoiceoverText,
+  resolveTargetDurationS,
+  resolveTargetIncludesOutro,
+  type PastScript,
+  type Script,
+  type ScriptVersion,
+} from '@vd/shared';
 
 /**
  * Context for Claude script generation: the operator's custom system prompt
- * (Settings → "Claude script generator"), the recent-script memory so new
- * scripts don't repeat earlier hooks/angles, and every past title so
- * AI-invented topics never re-cover old ground.
+ * (Settings → "Claude script generator"), the spoken-duration target the
+ * script must fit, the recent-script memory so new scripts don't repeat
+ * earlier hooks/angles, and every past title so AI-invented topics never
+ * re-cover old ground.
  */
 export async function getScriptGenContext(
   db: SupabaseClient,
   opts: { excludeVideoId?: string } = {},
-): Promise<{ systemPrompt?: string; recentScripts: PastScript[]; allTitles: string[] }> {
-  const [{ data: setting }, { data: videos }, { data: titleRows }] = await Promise.all([
-    db.from('app_settings').select('value').eq('key', 'script_system_prompt').maybeSingle(),
-    db
-      .from('videos')
-      .select('id, title, current_script_version_id')
-      .not('current_script_version_id', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(21),
-    db.from('videos').select('id, title').order('created_at', { ascending: false }).limit(200),
-  ]);
+): Promise<{
+  systemPrompt?: string;
+  recentScripts: PastScript[];
+  allTitles: string[];
+  targetDurationS: number;
+}> {
+  const [{ data: settingRows }, { data: videos }, { data: titleRows }, { data: outroRows }] =
+    await Promise.all([
+      db
+        .from('app_settings')
+        .select('key, value')
+        .in('key', ['script_system_prompt', 'target_duration_s', 'target_duration_includes_outro']),
+      db
+        .from('videos')
+        .select('id, title, current_script_version_id')
+        .not('current_script_version_id', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(21),
+      db.from('videos').select('id, title').order('created_at', { ascending: false }).limit(200),
+      db
+        .from('brand_assets')
+        .select('r2_key, name, meta, is_default')
+        .eq('kind', 'outro')
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1),
+    ]);
+  const settingByKey = new Map((settingRows ?? []).map((r) => [r.key as string, r.value]));
+  const setting = { value: settingByKey.get('script_system_prompt') };
 
   const rows = (videos ?? []).filter((v) => v.id !== opts.excludeVideoId).slice(0, 20);
   let recentScripts: PastScript[] = [];
@@ -42,7 +70,14 @@ export async function getScriptGenContext(
   const allTitles = (titleRows ?? [])
     .filter((v) => v.id !== opts.excludeVideoId)
     .map((v) => v.title as string);
-  return { systemPrompt, recentScripts, allTitles };
+
+  const targetDurationS = effectiveSpokenTargetS(
+    resolveTargetDurationS(settingByKey.get('target_duration_s')),
+    resolveTargetIncludesOutro(settingByKey.get('target_duration_includes_outro')),
+    estimateOutroDurationS(outroRows?.[0] ?? null),
+  );
+
+  return { systemPrompt, recentScripts, allTitles, targetDurationS };
 }
 
 /** Insert a new script version and point the video at it. */

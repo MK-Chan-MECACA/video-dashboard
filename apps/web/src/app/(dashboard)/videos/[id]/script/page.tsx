@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import type { ScriptVersion, Video } from '@vd/shared';
+import { resolveTargetDurationS, type ScriptVersion, type Video } from '@vd/shared';
 import { supabaseServer } from '@/lib/supabase';
 import { ScriptEditor } from '@/components/ScriptEditor';
 
@@ -25,9 +25,16 @@ export default async function ScriptPage({ params }: { params: Promise<{ id: str
     .eq('resolved', false)
     .order('created_at', { ascending: false });
 
+  const { data: targetSetting } = await supabase
+    .from('app_settings')
+    .select('value')
+    .eq('key', 'target_duration_s')
+    .maybeSingle();
+
   return (
     <ScriptEditor
       video={video as Video}
+      targetDurationS={resolveTargetDurationS(targetSetting?.value)}
       versions={(versions ?? []) as ScriptVersion[]}
       comments={(comments ?? []).map((c) => ({
         id: c.id,

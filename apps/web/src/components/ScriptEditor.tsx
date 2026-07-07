@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   SCENE_MODEL_OPTIONS,
+  SPOKEN_WORDS_PER_SECOND,
   sceneCode,
+  wordBudgetForDuration,
   type Script,
   type ScriptVersion,
   type Video,
@@ -32,10 +34,12 @@ const EMPTY: Script = {
 
 export function ScriptEditor({
   video,
+  targetDurationS,
   versions,
   comments,
 }: {
   video: Video;
+  targetDurationS: number;
   versions: ScriptVersion[];
   comments: CommentRow[];
 }) {
@@ -75,6 +79,10 @@ export function ScriptEditor({
     .join(' ')
     .split(/\s+/)
     .filter(Boolean).length;
+  const wordBudget = wordBudgetForDuration(targetDurationS);
+  const estimatedS = wordCount / SPOKEN_WORDS_PER_SECOND;
+  const overBudget = wordCount > Math.ceil(wordBudget * 1.1);
+  const nearBudget = !overBudget && wordCount > wordBudget;
 
   function setScene(i: number, patch: Partial<Script['scenes'][number]>) {
     setScript((s) => ({
@@ -164,9 +172,14 @@ export function ScriptEditor({
           ← {video.video_no ? `V${video.video_no} · ` : ''}{video.title}
         </Link>
         <StatusBadge status={video.status} />
-        <span className="ml-auto text-xs text-studio-muted">
+        <span
+          className={`ml-auto text-xs ${
+            overBudget ? 'text-red-400' : nearBudget ? 'text-amber-400' : 'text-studio-muted'
+          }`}
+        >
           {current ? `v${current.version} (${current.created_by})` : 'no version yet'} ·{' '}
-          {wordCount} words spoken
+          {wordCount} words · ~{Math.round(estimatedS)}s spoken (target {targetDurationS}s /{' '}
+          {wordBudget} words){overBudget && ' — over target, video will run long'}
         </span>
       </div>
 

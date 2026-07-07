@@ -1,12 +1,21 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { DEFAULT_SCENE_MODEL, sanitizeSpokenText, type Script } from './types';
+import {
+  DEFAULT_SCENE_MODEL,
+  DEFAULT_TARGET_DURATION_S,
+  SPOKEN_WORDS_PER_SECOND,
+  estimateSpokenDurationS,
+  sanitizeSpokenText,
+  spokenWordCount,
+  wordBudgetForDuration,
+  type Script,
+} from './types';
 
 const MODEL = 'claude-sonnet-5';
 
 /** Built-in system prompt — used when the operator hasn't saved a custom one in Settings.
  *  Encodes the Digital Avatar Short-Form Production SOP + the Narrator Bubble format (Rev 3).
  *  Brand-neutral template: the operator fills in the ABOUT YOUR BRAND block via Settings. */
-export const DEFAULT_SCRIPT_SYSTEM = `You are a short-form video scriptwriter (TikTok, Instagram Reels, YouTube Shorts). You write 15-second Narrator Bubble scripts.
+export const DEFAULT_SCRIPT_SYSTEM = `You are a short-form video scriptwriter (TikTok, Instagram Reels, YouTube Shorts). You write short Narrator Bubble scripts; the exact spoken-duration target and word budget are given in the DURATION CONTRACT appended below.
 
 ABOUT YOUR BRAND (edit this section in Settings before generating your first script):
 - Presenter: who speaks on camera — name, credibility, expertise, what makes them worth listening to.
@@ -20,7 +29,7 @@ FORMAT — Narrator Bubble (production SOP):
   - hook: 1-2 short spoken lines (first 3 seconds) that stop the scroll — pain the viewer recognizes, curiosity, myth-busting, or a warning. No greetings.
   - 3 scenes: each has "voiceover" (one short spoken line continuing the story) and "broll_prompt" (the main-scene visual illustrating that exact line).
   - cta: closing spoken line(s) — the presenter's sign-off woven with the invitation from ABOUT YOUR BRAND.
-- Total spoken text 30-45 words (~15 seconds). Short spoken sentences, short-form pacing — not brochure pacing. No emojis, no stage directions, no quotes-in-quotes.
+- Total spoken length is set by the DURATION CONTRACT below — never exceed its word budget. Short spoken sentences, short-form pacing — not brochure pacing. No emojis, no stage directions, no quotes-in-quotes.
 - NEVER use em-dashes or en-dashes anywhere in spoken text (hook, scene voiceovers, cta): the TTS voice reads straight through them without pausing, rushing the line. Use a comma or a period and short sentences instead.
 
 VOICE & HONESTY:
@@ -73,6 +82,37 @@ const SCRIPT_TOOL: Anthropic.Tool = {
 export interface GeneratedScript extends Script {
   title: string;
   model: string;
+  /** Spoken words in the returned script (same counting as fullVoiceoverText). */
+  wordCount: number;
+  /** wordCount / SPOKEN_WORDS_PER_SECOND — excludes the outro card. */
+  estimatedDurationS: number;
+  /** How many condense retries the enforcement loop needed (0 = first draft fit). */
+  condenseAttempts: number;
+}
+
+/**
+ * Appended to EVERY system prompt (default or operator-customized) so a stale
+ * word-count line in a saved custom prompt can never fight the live setting.
+ */
+export function buildDurationConstraint(targetDurationS: number): string {
+  const budget = wordBudgetForDuration(targetDurationS);
+  return `
+
+DURATION CONTRACT (authoritative — overrides ANY other word count or duration stated anywhere above):
+- Target spoken duration: ${targetDurationS} seconds. The voice reads at about ${SPOKEN_WORDS_PER_SECOND} words per second.
+- HARD LIMIT: hook + all 3 scene voiceovers + cta combined must total AT MOST ${budget} words. There is no minimum; shorter is fine.
+- Before calling submit_script, count every spoken word yourself. If the total exceeds ${budget}, cut words until it does not.
+- When the word budget conflicts with structure or content: keep the structure (hook, 3 scenes, cta) but make each part shorter. One short sentence per part is enough. Cut adjectives, compress the CTA invitation into one short line, drop anything the B-roll already shows.
+- The word budget applies ONLY to spoken text. B-roll prompts and the title are not counted.`;
+}
+
+/** Shortest compliant candidate, else shortest overall. Exported for tests. */
+export function pickBestScriptCandidate<T extends { words: number }>(
+  candidates: T[],
+  maxWords: number,
+): T {
+  const sorted = [...candidates].sort((a, b) => a.words - b.words);
+  return sorted.find((c) => c.words <= maxWords) ?? sorted[0];
 }
 
 /** Summary of an earlier script, injected as memory so new scripts don't repeat it. */
@@ -98,6 +138,7 @@ export async function generateScript(opts: {
   recentScripts?: PastScript[]; // memory: scripts already produced, newest first
   direction?: ScriptDirection;
   avoidTitles?: string[]; // hard no-repeat list of every title already produced
+  targetDurationS?: number; // spoken-duration target (Settings), default DEFAULT_TARGET_DURATION_S
 }): Promise<GeneratedScript> {
   const anthropic = new Anthropic({ apiKey: opts.apiKey });
 
@@ -131,39 +172,80 @@ export async function generateScript(opts: {
     user += `\n\nRevision instructions / reviewer feedback:\n${opts.instructions}`;
   }
 
-  const msg = await anthropic.messages.create({
-    model: MODEL,
-    max_tokens: 2000,
-    system: opts.systemPrompt?.trim() || DEFAULT_SCRIPT_SYSTEM,
-    tools: [SCRIPT_TOOL],
-    tool_choice: { type: 'tool', name: 'submit_script' },
-    messages: [{ role: 'user', content: user }],
-  });
+  const targetS = opts.targetDurationS ?? DEFAULT_TARGET_DURATION_S;
+  const budget = wordBudgetForDuration(targetS);
+  const maxWords = Math.ceil(budget * 1.1);
+  const system =
+    (opts.systemPrompt?.trim() || DEFAULT_SCRIPT_SYSTEM) + buildDurationConstraint(targetS);
 
-  const toolUse = msg.content.find(
-    (b: Anthropic.ContentBlock): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
-  );
-  if (!toolUse) throw new Error('Claude did not return a script');
-  const input = toolUse.input as {
-    title: string;
-    hook: string;
-    scenes: { voiceover: string; broll_prompt: string }[];
-    cta: string;
-  };
+  const messages: Anthropic.MessageParam[] = [{ role: 'user', content: user }];
+  const candidates: { script: Omit<GeneratedScript, 'wordCount' | 'estimatedDurationS' | 'condenseAttempts'>; words: number }[] = [];
 
-  // Sanitize spoken fields even though the prompt forbids dashes — the
-  // operator may run a custom system prompt without the rule.
+  // Up to 1 initial draft + 2 condense retries: Claude reliably overshoots the
+  // word budget when the brand prompt demands rich structure, so the loop
+  // rejects oversized drafts in the same conversation until one fits.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const msg = await anthropic.messages.create({
+      model: MODEL,
+      max_tokens: 2000,
+      system,
+      tools: [SCRIPT_TOOL],
+      tool_choice: { type: 'tool', name: 'submit_script' },
+      messages,
+    });
+
+    const toolUse = msg.content.find(
+      (b: Anthropic.ContentBlock): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
+    );
+    if (!toolUse) throw new Error('Claude did not return a script');
+    const input = toolUse.input as {
+      title: string;
+      hook: string;
+      scenes: { voiceover: string; broll_prompt: string }[];
+      cta: string;
+    };
+
+    // Sanitize spoken fields even though the prompt forbids dashes — the
+    // operator may run a custom system prompt without the rule.
+    const script = {
+      title: input.title,
+      hook: sanitizeSpokenText(input.hook),
+      cta: sanitizeSpokenText(input.cta),
+      scenes: input.scenes.slice(0, 3).map((s, i) => ({
+        index: i + 1,
+        voiceover: sanitizeSpokenText(s.voiceover),
+        broll_prompt: s.broll_prompt,
+        model_path: DEFAULT_SCENE_MODEL,
+      })),
+      model: MODEL,
+    };
+    const words = spokenWordCount(script);
+    candidates.push({ script, words });
+    if (words <= maxWords || attempt === 2) break;
+
+    messages.push({ role: 'assistant', content: msg.content });
+    messages.push({
+      role: 'user',
+      content: [
+        {
+          type: 'tool_result',
+          tool_use_id: toolUse.id,
+          content:
+            `Rejected: the script has ${words} spoken words but the hard limit is ${budget} ` +
+            `(target ${targetS}s at ~${SPOKEN_WORDS_PER_SECOND} words/sec). Resubmit the SAME script ` +
+            `condensed to at most ${budget} spoken words. Keep the hook idea, the 3 scenes with their ` +
+            `existing broll_prompt values, and the cta invitation — cut spoken words only. Do not add new content.`,
+        },
+      ],
+    });
+  }
+
+  const best = pickBestScriptCandidate(candidates, maxWords);
   return {
-    title: input.title,
-    hook: sanitizeSpokenText(input.hook),
-    cta: sanitizeSpokenText(input.cta),
-    scenes: input.scenes.slice(0, 3).map((s, i) => ({
-      index: i + 1,
-      voiceover: sanitizeSpokenText(s.voiceover),
-      broll_prompt: s.broll_prompt,
-      model_path: DEFAULT_SCENE_MODEL,
-    })),
-    model: MODEL,
+    ...best.script,
+    wordCount: best.words,
+    estimatedDurationS: estimateSpokenDurationS(best.words),
+    condenseAttempts: candidates.length - 1,
   };
 }
 

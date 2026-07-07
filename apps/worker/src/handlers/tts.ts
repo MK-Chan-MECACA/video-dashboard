@@ -2,6 +2,7 @@ import {
   DEFAULT_SCENE_MODEL,
   computeSceneCoverageWindows,
   fullVoiceoverText,
+  resolveTargetDurationS,
   type Job,
   type Script,
 } from '@vd/shared';
@@ -57,6 +58,18 @@ export async function handleTts(job: Job): Promise<void> {
     duration_s: speech.duration,
     words: speech.wordTimestamps.length,
   });
+
+  // Visibility backstop: a script that slipped past review too long (or a
+  // slower-than-expected voice) shows up in the timeline before avatar and
+  // B-roll credits are spent. Never fails the job.
+  const targetS = resolveTargetDurationS(await getAppSetting('target_duration_s'));
+  if (speech.duration && speech.duration > targetS * 1.25) {
+    await logEvent(video.id, 'voiceover_over_target', {
+      duration_s: speech.duration,
+      target_s: targetS,
+      words: speech.wordTimestamps.length,
+    });
+  }
 
   await setVideoStatus(video.id, 'avatar_generating', { job_id: job.id });
 

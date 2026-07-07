@@ -179,6 +179,67 @@ export function fullVoiceoverText(script: Script): string {
     .join(' ');
 }
 
+/** Measured HeyGen speech rate for this pipeline's voices (~2.0-2.3 words/sec). */
+export const SPOKEN_WORDS_PER_SECOND = 2.2;
+export const DEFAULT_TARGET_DURATION_S = 15;
+
+/** Words Claude may spend for a spoken-duration target (15s -> 33). */
+export function wordBudgetForDuration(targetDurationS: number): number {
+  return Math.round(targetDurationS * SPOKEN_WORDS_PER_SECOND);
+}
+
+/** Spoken word count of the exact text TTS will receive. */
+export function spokenWordCount(script: Script): number {
+  return fullVoiceoverText(script).split(/\s+/).filter(Boolean).length;
+}
+
+/** Estimated spoken seconds for a word count (excludes the outro card). */
+export function estimateSpokenDurationS(wordCount: number): number {
+  return wordCount / SPOKEN_WORDS_PER_SECOND;
+}
+
+/** Normalize the app_settings `target_duration_s` value; unparseable -> default. */
+export function resolveTargetDurationS(value: unknown): number {
+  const n = typeof value === 'string' ? Number(value) : (value as number);
+  return Number.isFinite(n)
+    ? Math.min(60, Math.max(6, Math.round(n as number)))
+    : DEFAULT_TARGET_DURATION_S;
+}
+
+/** Normalize the app_settings `target_duration_includes_outro` value. */
+export function resolveTargetIncludesOutro(value: unknown): boolean {
+  return value === true || value === 'true' || value === 1;
+}
+
+/**
+ * Estimated outro length without probing the file: stored duration when the
+ * uploader recorded one, else 5s for a video outro, 3s for a still card
+ * (matching the render engines' hardcoded still duration), 0 when no outro.
+ */
+export function estimateOutroDurationS(
+  outro: { r2_key?: string | null; name?: string | null; meta?: Record<string, unknown> | null } | null,
+): number {
+  if (!outro) return 0;
+  const metaDur = Number(outro.meta?.duration_s);
+  if (Number.isFinite(metaDur) && metaDur > 0) return metaDur;
+  const ref = outro.r2_key || outro.name || '';
+  return /\.(mp4|mov|webm)$/i.test(ref) ? 5 : 3;
+}
+
+/**
+ * The spoken-duration target Claude must hit. When the operator's target
+ * includes the outro card, the script gets whatever remains after it.
+ */
+export function effectiveSpokenTargetS(
+  targetDurationS: number,
+  includesOutro: boolean,
+  outroDurationS: number,
+): number {
+  return includesOutro
+    ? Math.max(6, Math.round(targetDurationS - outroDurationS))
+    : targetDurationS;
+}
+
 /**
  * Compute each section's time window in the voiceover by walking
  * word timestamps against the known section texts.

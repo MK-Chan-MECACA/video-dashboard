@@ -2,7 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import type { BrandAssetKind } from '@vd/shared/types';
+import {
+  SPOKEN_WORDS_PER_SECOND,
+  resolveTargetDurationS,
+  resolveTargetIncludesOutro,
+  wordBudgetForDuration,
+  type BrandAssetKind,
+} from '@vd/shared/types';
 import {
   DEFAULT_RENDER_TEMPLATE,
   resolveRenderTemplate,
@@ -88,6 +94,13 @@ export function SettingsClient({
   const savedPrompt = (settings.script_system_prompt as string) ?? '';
   const [scriptPrompt, setScriptPrompt] = useState(savedPrompt || defaultScriptPrompt);
   const [promptSaved, setPromptSaved] = useState(false);
+  const [targetDur, setTargetDur] = useState(
+    String(resolveTargetDurationS(settings.target_duration_s)),
+  );
+  const [targetIncludesOutro, setTargetIncludesOutro] = useState(
+    resolveTargetIncludesOutro(settings.target_duration_includes_outro),
+  );
+  const [targetDurSaved, setTargetDurSaved] = useState(false);
   const [brandName, setBrandName] = useState((settings.brand_name as string) ?? '');
   const [brandSaved, setBrandSaved] = useState(false);
   const savedCaptionPrompt = (settings.caption_system_prompt as string) ?? '';
@@ -526,10 +539,66 @@ export function SettingsClient({
 
       <section className={`space-y-3 rounded-[14px] border border-studio-border bg-studio-panel p-6 ${show('prompt')}`}>
         <h2 className="text-lg font-semibold text-studio-bright">Claude script generator</h2>
+        <div className="space-y-2 rounded-[8px] border border-studio-border p-3">
+          <label className="block text-sm font-medium text-studio-sub">
+            Target video length (seconds)
+          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="number"
+              min={6}
+              max={60}
+              value={targetDur}
+              onChange={(e) => {
+                setTargetDur(e.target.value);
+                setTargetDurSaved(false);
+              }}
+              className="w-20 rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-1.5 text-sm"
+            />
+            <label className="flex items-center gap-1.5 text-xs text-studio-sub">
+              <input
+                type="checkbox"
+                checked={targetIncludesOutro}
+                onChange={(e) => {
+                  setTargetIncludesOutro(e.target.checked);
+                  setTargetDurSaved(false);
+                }}
+              />
+              Target includes the outro card (spoken part gets what remains)
+            </label>
+            <button
+              onClick={async () => {
+                const n = resolveTargetDurationS(targetDur);
+                setTargetDur(String(n));
+                const ok =
+                  (await saveSetting('target_duration_s', n)) &&
+                  (await saveSetting('target_duration_includes_outro', targetIncludesOutro));
+                if (ok) setTargetDurSaved(true);
+              }}
+              disabled={!!busy}
+              className="studio-lift rounded-[9px] bg-studio-accent px-3 py-1.5 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
+            >
+              {busy === 'target_duration_s' || busy === 'target_duration_includes_outro'
+                ? 'Saving…'
+                : 'Save length'}
+            </button>
+            {targetDurSaved && <span className="text-xs text-emerald-400">Saved ✓</span>}
+          </div>
+          <p className="text-xs text-studio-muted">
+            Enforced as a hard word budget when Claude writes scripts (~
+            {SPOKEN_WORDS_PER_SECOND} words/sec, so {resolveTargetDurationS(targetDur)}s ≈{' '}
+            {wordBudgetForDuration(resolveTargetDurationS(targetDur))} spoken words).{' '}
+            {targetIncludesOutro
+              ? 'The outro card (~3-5s) is counted inside the target, leaving less time for speech.'
+              : 'The outro card adds ~3-5s on top of this target.'}
+          </p>
+        </div>
         <p className="text-xs text-studio-muted">
           System prompt used every time Claude writes or regenerates a script. Claude also
           remembers your previously generated scripts automatically, so new requests get fresh
-          hooks and angles instead of repeats.
+          hooks and angles instead of repeats. The target length above is appended to this prompt
+          as an authoritative duration contract — any word counts written in the prompt itself are
+          overridden.
         </p>
         <textarea
           value={scriptPrompt}
