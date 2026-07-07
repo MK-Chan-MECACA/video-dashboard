@@ -753,7 +753,7 @@ export function SettingsClient({
         ) : (
           <div className="flex gap-2">
             <select
-              value={voiceId}
+              value={voices.some((v) => v.voice_id === voiceId) ? voiceId : ''}
               onChange={(e) => setVoiceId(e.target.value)}
               className="flex-1 rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1.5 text-sm"
             >
@@ -773,6 +773,31 @@ export function SettingsClient({
             </button>
           </div>
         )}
+        <div className="space-y-1.5 border-t border-studio-border pt-3">
+          <label className="text-xs font-medium text-studio-sub">
+            Or paste a custom voice ID
+          </label>
+          <p className="text-xs text-studio-muted">
+            Cloned / custom voices don&apos;t appear in the list above. Paste the voice ID from
+            HeyGen (Avatars &amp; Voices → your voice) and save it directly.
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={voiceId}
+              onChange={(e) => setVoiceId(e.target.value.trim())}
+              placeholder="e.g. 66b5794bec1b473b86cabf1529402d0f"
+              className="flex-1 rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1.5 font-mono text-sm"
+            />
+            <button
+              onClick={() => saveSetting('heygen_voice_id', voiceId)}
+              disabled={!voiceId || !!busy}
+              className="studio-lift rounded-[9px] bg-studio-accent px-3 py-1.5 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
+            >
+              Save
+            </button>
+          </div>
+        </div>
       </section>
 
       <section className={`space-y-3 rounded-[14px] border border-studio-border bg-studio-panel p-6 ${show('social')}`}>
