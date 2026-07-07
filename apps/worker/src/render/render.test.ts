@@ -203,7 +203,7 @@ assert.ok(graph.includes("subtitles=filename='/tmp/in/subs.ass'"), 'subtitles fi
 assert.ok(graph.indexOf('subtitles=') < graph.indexOf('concat='), 'subs before concat');
 assert.ok(graph.includes('concat=n=2:v=1:a=0'), 'outro concat');
 // audio: ducked bgm plays through the outro, voiceover padded before the mix
-assert.ok(graph.includes('volume=0.13'), 'bgm ducked');
+assert.ok(graph.includes('volume=0.08'), 'bgm ducked to the default level');
 assert.ok(graph.includes('afade=t=out:st=16:d=3'), 'bgm fade ends with the outro');
 assert.ok(graph.includes('amix=inputs=2:duration=first'), 'amix');
 assert.ok(graph.includes('[0:a]apad=whole_dur=19[vo]'), 'voiceover padded to main+outro before amix');
@@ -235,6 +235,20 @@ const bareGraph = bare.args[bare.args.indexOf('-filter_complex') + 1];
 assert.ok(!bareGraph.includes('concat='), 'no concat without outro');
 assert.ok(!bareGraph.includes('amix'), 'no amix without bgm');
 assert.ok(!bareGraph.includes('alphamerge'), 'no bubble without a mask path');
+
+// explicit bgmVolume overrides the default in the mix
+const quiet = buildRenderPlan({
+  avatarPath: '/a.mp4',
+  avatarDurationS: 10,
+  scenes: [{ path: '/s1.mp4', durationS: 4, windowStart: 1, windowEnd: 5 }],
+  words,
+  subsPath: '/subs.ass',
+  outPath: '/out.mp4',
+  bgmPath: '/bgm.mp3',
+  bgmVolume: 0.04,
+});
+const quietGraph = quiet.args[quiet.args.indexOf('-filter_complex') + 1];
+assert.ok(quietGraph.includes('volume=0.04'), 'bgmVolume overrides default');
 assert.ok(!bareGraph.includes('split='), 'no avatar split without a bubble');
 assert.ok(bareGraph.includes('apad=whole_dur=10'), 'apad to main only');
 

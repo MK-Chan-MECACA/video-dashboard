@@ -6,6 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   computeSceneCoverageWindows,
+  resolveBgmVolume,
   resolveRenderTemplate,
   stripMarkerWords,
   type Asset,
@@ -93,15 +94,17 @@ export async function handleRender(job: Job): Promise<void> {
     sceneAssets.push(a);
   }
 
-  const [logo, outro, bgm, rawTemplate, rawEngine] = await Promise.all([
+  const [logo, outro, bgm, rawTemplate, rawEngine, rawBgmVolume] = await Promise.all([
     getBrandAsset('logo'),
     getBrandAsset('outro'),
     getBrandAsset('bgm'),
     getAppSetting('render_template'),
     getAppSetting('render_engine'),
+    getAppSetting('bgm_volume'),
   ]);
   const template = resolveRenderTemplate(rawTemplate);
   const engine: 'ffmpeg' | 'hyperframes' = rawEngine === 'ffmpeg' ? 'ffmpeg' : 'hyperframes';
+  const bgmVolume = resolveBgmVolume(rawBgmVolume);
 
   const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'vd-render-'));
   try {
@@ -210,6 +213,7 @@ export async function handleRender(job: Job): Promise<void> {
         outroIsVideo,
         outroDurationS,
         bgmPath,
+        bgmVolume,
         fontsDir: bundledFontsDir(),
         template,
         bubbleMaskPath,
@@ -287,6 +291,7 @@ export async function handleRender(job: Job): Promise<void> {
         outroIsVideo,
         outroDurationS,
         bgmFile: bgmPath ? await stage(bgmPath) : null,
+        bgmVolume,
         template,
       });
 

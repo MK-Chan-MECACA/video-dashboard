@@ -1,4 +1,5 @@
 import {
+  DEFAULT_BGM_VOLUME,
   DEFAULT_RENDER_TEMPLATE,
   type BubblePosition,
   type LogoPosition,
@@ -29,6 +30,8 @@ export interface RenderPlanInput {
   /** Required when outroIsVideo; images default to 3s. */
   outroDurationS?: number;
   bgmPath?: string | null;
+  /** BGM level (linear 0-1); defaults to DEFAULT_BGM_VOLUME. */
+  bgmVolume?: number;
   fontsDir?: string | null;
   /** Layout template; defaults to DEFAULT_RENDER_TEMPLATE. */
   template?: RenderTemplate;
@@ -112,10 +115,11 @@ export function bubbleCropPx(crop: RenderTemplate['avatarBubble']['crop']): {
  * controlled, pinned for the whole main video) -> logo overlay -> burned ASS
  * subtitles -> concat with the outro (subtitles/logo never touch the outro).
  * Audio: avatar voiceover (silence-padded through the outro) + looped BGM
- * ducked to 0.13 playing to the end of the outro with a 3s fade-out.
+ * ducked to input.bgmVolume playing to the end of the outro with a 3s fade-out.
  */
 export function buildRenderPlan(input: RenderPlanInput): RenderPlan {
   const template = input.template ?? DEFAULT_RENDER_TEMPLATE;
+  const bgmVolume = input.bgmVolume ?? DEFAULT_BGM_VOLUME;
   const bubble = template.avatarBubble;
   const useBubble = bubble.enabled && Boolean(input.bubbleMaskPath) && input.scenes.length > 0;
   const mainDur = input.avatarDurationS;
@@ -222,7 +226,7 @@ export function buildRenderPlan(input: RenderPlanInput): RenderPlan {
     // BGM fade-out covers the last 3s of the whole video.
     const fadeStart = Math.max(0, totalDur - 3);
     fg.push(`[0:a]apad=whole_dur=${fmt(totalDur)}[vo]`);
-    fg.push(`[${bgmIdx}:a]volume=0.13,afade=t=out:st=${fmt(fadeStart)}:d=3[bgm]`);
+    fg.push(`[${bgmIdx}:a]volume=${fmt(bgmVolume)},afade=t=out:st=${fmt(fadeStart)}:d=3[bgm]`);
     fg.push(`[vo][bgm]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]`);
   } else {
     fg.push(`[0:a]apad=whole_dur=${fmt(totalDur)}[aout]`);

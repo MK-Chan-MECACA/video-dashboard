@@ -75,9 +75,21 @@ assert.ok(/id="outro"[^>]*data-start="16"/.test(html), 'outro starts at main end
 // audio: voiceover at full volume ending with the main part, bgm ducked and
 // running through the outro
 assert.ok(/id="voiceover"[^>]*data-duration="16"[^>]*data-volume="1"/.test(html), 'voiceover');
-assert.ok(/id="bgm"[^>]*data-duration="19"[^>]*data-volume="0.13"/.test(html), 'ducked bgm through outro');
+// bgm ducked to the default level when no bgmVolume is set
+assert.ok(/id="bgm"[^>]*data-duration="19"[^>]*data-volume="0.08"/.test(html), 'ducked bgm through outro');
 // one registered paused timeline
 assert.ok(html.includes('window.__timelines["main"] = gsap.timeline({ paused: true })'), 'timeline registered');
+
+// explicit bgmVolume overrides the default
+const quietBgm = buildHfComposition({
+  avatarFile: 'assets/avatar.mp4',
+  avatarDurationS: 10,
+  scenes: [],
+  words,
+  bgmFile: 'assets/bgm.mp3',
+  bgmVolume: 0.04,
+});
+assert.ok(/id="bgm"[^>]*data-volume="0.04"/.test(quietBgm.html), 'bgmVolume overrides default');
 
 // bubble disabled -> no bubble clips
 const noBubble = buildHfComposition({

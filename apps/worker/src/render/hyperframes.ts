@@ -1,4 +1,9 @@
-import { DEFAULT_RENDER_TEMPLATE, type RenderTemplate, type WordTimestamp } from '@vd/shared';
+import {
+  DEFAULT_BGM_VOLUME,
+  DEFAULT_RENDER_TEMPLATE,
+  type RenderTemplate,
+  type WordTimestamp,
+} from '@vd/shared';
 import { groupWordsIntoCues } from './ass';
 import { bubbleCropPx } from './render';
 
@@ -28,6 +33,8 @@ export interface HfCompositionInput {
   outroIsVideo?: boolean;
   outroDurationS?: number;
   bgmFile?: string | null;
+  /** BGM level (linear 0-1); defaults to DEFAULT_BGM_VOLUME. */
+  bgmVolume?: number;
   template?: RenderTemplate;
 }
 
@@ -159,8 +166,9 @@ export function buildHfComposition(input: HfCompositionInput): HfComposition {
     `<audio id="voiceover" src="${input.avatarFile}" data-start="0" data-duration="${fmt(mainDur)}" data-track-index="10" data-volume="1"></audio>`,
   );
   if (input.bgmFile) {
+    const bgmVolume = input.bgmVolume ?? DEFAULT_BGM_VOLUME;
     clips.push(
-      `<audio id="bgm" src="${input.bgmFile}" data-start="0" data-duration="${fmt(totalDur)}" data-track-index="11" data-volume="0.13"></audio>`,
+      `<audio id="bgm" src="${input.bgmFile}" data-start="0" data-duration="${fmt(totalDur)}" data-track-index="11" data-volume="${fmt(bgmVolume)}"></audio>`,
     );
   }
 

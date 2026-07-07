@@ -245,7 +245,7 @@ export const TOOL_DEFS: ToolDef[] = [
   {
     name: 'update_settings',
     description:
-      'Upsert app settings as key/value pairs (e.g. heygen_voice_id, script_system_prompt, caption_system_prompt, target_duration_s, target_duration_includes_outro, render_engine, brand_name).',
+      'Upsert app settings as key/value pairs (e.g. heygen_voice_id, script_system_prompt, caption_system_prompt, target_duration_s, target_duration_includes_outro, render_engine, bgm_volume, brand_name).',
     inputSchema: {
       settings: z.record(z.unknown()).describe('Object of setting key → value'),
     },

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
   SPOKEN_WORDS_PER_SECOND,
+  resolveBgmVolume,
   resolveTargetDurationS,
   resolveTargetIncludesOutro,
   wordBudgetForDuration,
@@ -108,6 +109,8 @@ export function SettingsClient({
   const [captionSaved, setCaptionSaved] = useState(false);
   const [tpl, setTpl] = useState<RenderTemplate>(() => resolveRenderTemplate(settings.render_template));
   const [tplSaved, setTplSaved] = useState(false);
+  const [bgmVolume, setBgmVolume] = useState(() => resolveBgmVolume(settings.bgm_volume));
+  const [bgmVolumeSaved, setBgmVolumeSaved] = useState(false);
   const [directionText, setDirectionText] = useState<Record<DirectionField['key'], string>>(() => {
     const resolved = resolveDirectionFields(settings.script_direction_presets);
     return Object.fromEntries(resolved.map((f) => [f.key, presetsToText(f.presets)])) as Record<
@@ -337,6 +340,42 @@ export function SettingsClient({
             <option value="hyperframes">HyperFrames (default)</option>
             <option value="ffmpeg">ffmpeg only</option>
           </select>
+        </div>
+
+        <div className="rounded-[10px] border border-studio-border bg-studio-card p-3">
+          <p className="mb-1 text-sm font-medium">Background music volume</p>
+          <p className="mb-2 text-xs text-studio-muted">
+            How loud the looped BGM sits under the voiceover. Lower it if the music drowns out
+            speech; 8% is the default ducked level. Applies to new renders — use Re-render to apply.
+          </p>
+          <div className="flex items-center gap-3">
+            <input
+              type="range"
+              min={0}
+              max={0.3}
+              step={0.01}
+              value={bgmVolume}
+              onChange={(e) => {
+                setBgmVolume(Number(e.target.value));
+                setBgmVolumeSaved(false);
+              }}
+              className="flex-1 accent-studio-accent"
+            />
+            <span className="w-10 text-right text-sm tabular-nums text-studio-text">
+              {Math.round(bgmVolume * 100)}%
+            </span>
+            <button
+              onClick={async () => {
+                const ok = await saveSetting('bgm_volume', bgmVolume);
+                if (ok) setBgmVolumeSaved(true);
+              }}
+              disabled={!!busy}
+              className="studio-lift rounded-[9px] bg-studio-accent px-3 py-1.5 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
+            >
+              {busy === 'bgm_volume' ? 'Saving…' : 'Save volume'}
+            </button>
+            {bgmVolumeSaved && <span className="text-xs text-emerald-400">Saved ✓</span>}
+          </div>
         </div>
 
         <div className="rounded-[10px] border border-studio-border bg-studio-card p-3">

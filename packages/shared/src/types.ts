@@ -212,6 +212,18 @@ export function resolveTargetIncludesOutro(value: unknown): boolean {
 }
 
 /**
+ * BGM level (linear amplitude) mixed under the voiceover in both render
+ * engines. 0.08 ≈ -22 dB — quiet enough to sit under speech.
+ */
+export const DEFAULT_BGM_VOLUME = 0.08;
+
+/** Normalize the app_settings `bgm_volume` value (linear 0-1); unparseable -> default. */
+export function resolveBgmVolume(value: unknown): number {
+  const n = typeof value === 'string' ? Number(value) : (value as number);
+  return Number.isFinite(n) ? Math.min(1, Math.max(0, n as number)) : DEFAULT_BGM_VOLUME;
+}
+
+/**
  * Estimated outro length without probing the file: stored duration when the
  * uploader recorded one, else 5s for a video outro, 3s for a still card
  * (matching the render engines' hardcoded still duration), 0 when no outro.
