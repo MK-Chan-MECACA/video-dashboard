@@ -11,6 +11,7 @@ import {
 } from '@vd/shared';
 import { estimateVideoCost, formatUsd } from '@vd/shared/pricing';
 import { supabaseServer, roleOf } from '@/lib/supabase';
+import { LocalTime, LocalTimeTitle } from '@/components/LocalTime';
 import { ScriptView } from '@/components/ScriptView';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DeleteVideoButton, VideoNumberBadge } from '@/components/VideoAdmin';
@@ -344,10 +345,11 @@ export default async function VideoDetailPage({
               <h2 className="mb-2.5 text-[13px] font-semibold text-[#d8cfbf]">Approvals</h2>
               <ul className="space-y-2 text-xs">
                 {(approvals ?? []).map((a) => (
-                  <li
+                  <LocalTimeTitle
                     key={a.id}
+                    as="li"
+                    iso={a.created_at}
                     className="flex items-center gap-2"
-                    title={new Date(a.created_at).toLocaleString()}
                   >
                     <span
                       className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[10px] ${
@@ -362,7 +364,7 @@ export default async function VideoDetailPage({
                       {a.kind} — <b className="text-studio-text">{a.decision}</b> by{' '}
                       {a.reviewer_name}
                     </span>
-                  </li>
+                  </LocalTimeTitle>
                 ))}
                 {(v.status === 'script_review' || v.status === 'video_review') && (
                   <li className="flex items-center gap-2">
@@ -382,20 +384,13 @@ export default async function VideoDetailPage({
             <h2 className="mb-2.5 text-[13px] font-semibold text-[#d8cfbf]">Timeline</h2>
             <ul className="space-y-[9px] text-xs text-studio-sub">
               {(events ?? []).map((e) => (
-                <li
-                  key={e.id}
-                  className="flex gap-2.5"
-                  title={new Date(e.created_at).toLocaleString()}
-                >
-                  <span className="whitespace-nowrap font-mono text-[#6f6a60]">
-                    {new Date(e.created_at).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: false,
-                    })}
-                  </span>
+                <LocalTimeTitle key={e.id} as="li" iso={e.created_at} className="flex gap-2.5">
+                  <LocalTime
+                    iso={e.created_at}
+                    className="whitespace-nowrap font-mono text-[#6f6a60]"
+                  />
                   <span>{String(e.event).replaceAll('_', ' ')}</span>
-                </li>
+                </LocalTimeTitle>
               ))}
               {(events ?? []).length === 0 && (
                 <li className="text-studio-faint">No events yet</li>
