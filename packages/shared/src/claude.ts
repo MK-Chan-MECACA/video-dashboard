@@ -115,6 +115,26 @@ export function pickBestScriptCandidate<T extends { words: number }>(
   return sorted.find((c) => c.words <= maxWords) ?? sorted[0];
 }
 
+/**
+ * Format unresolved reviewer comments as revision instructions. Reviewers
+ * often type the exact wording they want rather than an instruction, so the
+ * prompt tells Claude to apply replacement text nearly verbatim.
+ */
+export function formatReviewerFeedback(
+  comments: { section_key: string; body: string }[],
+): string | undefined {
+  if (!comments.length) return undefined;
+  const lines = comments.map((c) => `[${c.section_key}] ${c.body}`).join('\n');
+  return `Reviewer comments, each tagged with the script section it targets:
+${lines}
+
+How to apply them:
+- A comment that reads as replacement wording for its section (a rewritten sentence or phrase) -> use that wording as the section's new spoken text, nearly verbatim, adjusted only to fit the word budget and read naturally aloud.
+- A comment that reads as an instruction or critique -> follow it.
+- A comment with no actionable content (e.g. "ok", "done", "commented") -> ignore.
+- Keep every section the comments do not mention as close to the previous script as possible.`;
+}
+
 /** Summary of an earlier script, injected as memory so new scripts don't repeat it. */
 export interface PastScript {
   title: string;

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   BOARD_COLUMNS,
+  formatReviewerFeedback,
   generateScript,
   type Asset,
   type Job,
@@ -405,7 +406,7 @@ export async function regenerateScript(
     .select('id, section_key, body')
     .eq('video_id', id)
     .eq('resolved', false);
-  const feedback = (comments ?? []).map((c) => `[${c.section_key}] ${c.body}`).join('\n');
+  const feedback = formatReviewerFeedback(comments ?? []);
 
   const { systemPrompt, recentScripts, targetDurationS } = await getScriptGenContext(db, {
     excludeVideoId: id,
@@ -414,9 +415,7 @@ export async function regenerateScript(
     apiKey: process.env.ANTHROPIC_API_KEY!,
     topicBrief: video.topic_brief ?? video.title,
     previousScript: previous,
-    instructions: [opts.instructions, feedback && `Reviewer comments:\n${feedback}`]
-      .filter(Boolean)
-      .join('\n\n'),
+    instructions: [opts.instructions, feedback].filter(Boolean).join('\n\n'),
     systemPrompt,
     recentScripts,
     targetDurationS,

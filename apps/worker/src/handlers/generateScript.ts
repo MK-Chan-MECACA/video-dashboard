@@ -1,6 +1,7 @@
 import {
   effectiveSpokenTargetS,
   estimateOutroDurationS,
+  formatReviewerFeedback,
   fullVoiceoverText,
   generateScript,
   resolveTargetDurationS,
@@ -51,7 +52,6 @@ export async function handleGenerateScript(job: Job): Promise<void> {
     select id, section_key, body from review_comments
     where video_id = ${video.id} and resolved = false
   `;
-  const feedback = comments.map((c) => `[${c.section_key}] ${c.body}`).join('\n');
 
   const [sysPrompt, targetRaw, includesRaw, outro, recent] = await Promise.all([
     getAppSetting('script_system_prompt'),
@@ -75,7 +75,7 @@ export async function handleGenerateScript(job: Job): Promise<void> {
     apiKey: requiredEnv('ANTHROPIC_API_KEY'),
     topicBrief: video.topic_brief ?? video.title,
     previousScript: previous,
-    instructions: feedback ? `Reviewer comments:\n${feedback}` : undefined,
+    instructions: formatReviewerFeedback(comments),
     systemPrompt: typeof sysPrompt === 'string' ? sysPrompt : undefined,
     recentScripts: recent.filter((r) => r.hook),
     targetDurationS,
