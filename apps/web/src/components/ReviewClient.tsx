@@ -199,7 +199,9 @@ export function ReviewClient({
         >
           {done === 'approved'
             ? '✓ Approved — thank you! Production continues automatically.'
-            : '✓ Changes requested — the team has been notified.'}
+            : kind === 'script'
+              ? '✓ Changes requested — the script is being revised and will come back for review shortly.'
+              : '✓ Changes requested — the team has been notified.'}
         </div>
       )}
 

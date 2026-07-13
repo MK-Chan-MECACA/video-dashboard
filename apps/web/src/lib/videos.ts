@@ -402,7 +402,7 @@ export async function regenerateScript(
   // Fold in unresolved reviewer comments so regeneration addresses them.
   const { data: comments } = await db
     .from('review_comments')
-    .select('section_key, body')
+    .select('id, section_key, body')
     .eq('video_id', id)
     .eq('resolved', false);
   const feedback = (comments ?? []).map((c) => `[${c.section_key}] ${c.body}`).join('\n');
@@ -427,7 +427,16 @@ export async function regenerateScript(
     createdBy: 'claude',
     claudeModel: script.model,
   });
-  if (video.status === 'script_generating' || video.status === 'script_changes_requested') {
+  // The comments were folded into the revision — mark them addressed.
+  const commentIds = (comments ?? []).map((c) => c.id);
+  if (commentIds.length) {
+    await db.from('review_comments').update({ resolved: true }).in('id', commentIds);
+  }
+  if (video.status === 'script_changes_requested') {
+    // Revision addressed the reviewer's comments — send it straight back.
+    await db.from('videos').update({ status: 'script_review' }).eq('id', id);
+    await logEvent(db, id, 'sent_for_script_review');
+  } else if (video.status === 'script_generating') {
     await db.from('videos').update({ status: 'draft' }).eq('id', id);
   }
   await logEvent(db, id, 'script_regenerated', {
@@ -534,6 +543,11 @@ export async function applyReviewDecision(
         ...(opts.reviewer_user_id ? { reviewer_user_id: opts.reviewer_user_id } : {}),
         ...(opts.reviewer_email ? { reviewer_email: opts.reviewer_email } : {}),
       });
+    }
+    if (opts.kind === 'script') {
+      // Auto-revise: the worker regenerates the script from the unresolved
+      // comments and sends it straight back to review.
+      await db.from('jobs').insert({ video_id: videoId, type: 'generate_script', payload: {} });
     }
     await db.from('pipeline_events').insert({
       video_id: videoId,

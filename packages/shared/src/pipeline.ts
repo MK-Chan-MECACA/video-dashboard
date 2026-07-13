@@ -22,6 +22,7 @@ export const TRANSITIONS: Record<VideoStatus, VideoStatus[]> = {
   posted: [],
   failed: [
     'script_generating',
+    'script_review',
     'voice_generating',
     'avatar_generating',
     'scenes_generating',
