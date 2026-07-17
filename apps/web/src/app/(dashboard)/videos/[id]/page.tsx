@@ -112,6 +112,14 @@ export default async function VideoDetailPage({
             Open script editor →
           </Link>
         )}
+        {isOperator && latestByKind('composition_html') && (
+          <Link
+            href={`/videos/${v.id}/editor`}
+            className="rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#d8cfbf] transition-colors hover:bg-[#201d18] hover:text-studio-bright"
+          >
+            Open video editor →
+          </Link>
+        )}
       </div>
 
       {v.status === 'failed' && v.status_error && (

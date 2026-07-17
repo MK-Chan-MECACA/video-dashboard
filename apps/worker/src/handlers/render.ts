@@ -1,4 +1,4 @@
-import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import os from 'node:os';
@@ -12,6 +12,7 @@ import {
   type Asset,
   type Job,
   type Script,
+  type Video,
   type WordTimestamp,
 } from '@vd/shared';
 import { r2 } from '../clients';
@@ -62,17 +63,113 @@ interface RenderResult {
   outroDurationS: number;
   totalDurationS: number;
   /** Engine-specific layout artifact uploaded next to the video for debugging. */
-  artifact: { key: string; content: string; contentType: string; assetKind?: 'subtitle_ass' };
+  artifact: {
+    key: string;
+    content: string;
+    contentType: string;
+    assetKind?: 'subtitle_ass' | 'composition_html';
+    meta?: Record<string, unknown>;
+  };
+}
+
+const HF_ASSET_CONTENT_TYPES: Record<string, string> = {
+  '.mp4': 'video/mp4',
+  '.mov': 'video/quicktime',
+  '.webm': 'video/webm',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.mp3': 'audio/mpeg',
+  '.wav': 'audio/wav',
+  '.m4a': 'audio/mp4',
+};
+
+/**
+ * Render the stored (possibly operator-edited) composition verbatim — no
+ * regeneration, no ffmpeg fallback (ffmpeg cannot honor edited HTML).
+ */
+async function renderFromComposition(job: Job, video: Video): Promise<void> {
+  const comp = await getLatestAsset(video.id, 'composition_html');
+  if (!comp) {
+    throw new Error('No editable composition found — run a normal render first');
+  }
+  const manifest = (comp.meta.assets ?? {}) as Record<string, string>;
+
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), 'vd-render-'));
+  try {
+    const hfDir = path.join(tmpDir, 'hf');
+    const hfAssets = path.join(hfDir, 'assets');
+    await mkdir(hfAssets, { recursive: true });
+
+    await writeFile(path.join(hfDir, 'index.html'), await r2().getBytes(comp.r2_key));
+    for (const [name, key] of Object.entries(manifest)) {
+      await writeFile(path.join(hfAssets, path.basename(name)), await r2().getBytes(key));
+    }
+    for (const f of hfProjectFiles(`vd-${video.id}`)) {
+      await writeFile(path.join(hfDir, f.path), f.content, 'utf8');
+    }
+
+    const outPath = path.join(tmpDir, 'final.mp4');
+    const thumbPath = path.join(tmpDir, 'thumb.jpg');
+    const cli = hyperframesCliPath();
+    console.log(`[render] video ${video.id}: hyperframes render from stored composition (${cli})`);
+    await run(process.execPath, [cli, 'render', '--workers', '1', '--output', outPath], {
+      cwd: hfDir,
+    });
+    await runFfmpeg(buildThumbnailArgs(outPath, thumbPath));
+
+    const finalKey = `videos/${video.id}/final.mp4`;
+    const thumbKey = `videos/${video.id}/thumb.jpg`;
+    const [finalBytes, thumbBytes] = await Promise.all([readFile(outPath), readFile(thumbPath)]);
+    await r2().put(finalKey, finalBytes, 'video/mp4');
+    await r2().put(thumbKey, thumbBytes, 'image/jpeg');
+
+    const durationS = await probeDurationS(outPath);
+    await insertAsset({
+      video_id: video.id,
+      kind: 'final_video',
+      r2_key: finalKey,
+      duration_s: Number(durationS.toFixed(3)),
+      size_bytes: finalBytes.length,
+      meta: {
+        main_duration_s: comp.meta.main_duration_s,
+        outro_duration_s: comp.meta.outro_duration_s,
+        render_engine: 'hyperframes',
+        from_composition: true,
+      },
+    });
+    await insertAsset({
+      video_id: video.id,
+      kind: 'thumbnail',
+      r2_key: thumbKey,
+      size_bytes: thumbBytes.length,
+    });
+
+    await logEvent(video.id, 'render_completed', {
+      job_id: job.id,
+      duration_s: durationS,
+      size_bytes: finalBytes.length,
+      render_engine: 'hyperframes',
+      from_composition: true,
+    });
+    await setVideoStatus(video.id, 'video_review', { job_id: job.id });
+    await completeJob(job.id);
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
 }
 
 export async function handleRender(job: Job): Promise<void> {
   const video = await getVideo(job.video_id);
-  if (!video.current_script_version_id) {
-    throw new Error(`Video ${video.id} has no current script version`);
-  }
   // Re-render can arrive from video_changes_requested; move into rendering so
   // the final rendering -> video_review transition is valid. No-op if already there.
   await setVideoStatus(video.id, 'rendering', { job_id: job.id });
+  if (job.payload.use_composition) {
+    return renderFromComposition(job, video);
+  }
+  if (!video.current_script_version_id) {
+    throw new Error(`Video ${video.id} has no current script version`);
+  }
   const sv = await getScriptVersion(video.current_script_version_id);
   const script: Script = { hook: sv.hook, scenes: sv.scenes, cta: sv.cta };
 
@@ -309,6 +406,19 @@ export async function handleRender(job: Job): Promise<void> {
         [cli, 'render', '--workers', '1', '--output', outPath],
         { cwd: hfDir },
       );
+
+      // Publish the staged media so the composition stays editable and
+      // re-renderable (see renderFromComposition). Only after a successful
+      // render — an ffmpeg fallback must not leave a half-published project.
+      const manifest: Record<string, string> = {};
+      for (const name of await readdir(hfAssets)) {
+        const key = `videos/${video.id}/composition/assets/${name}`;
+        const contentType =
+          HF_ASSET_CONTENT_TYPES[path.extname(name).toLowerCase()] ?? 'application/octet-stream';
+        await r2().put(key, await readFile(path.join(hfAssets, name)), contentType);
+        manifest[name] = key;
+      }
+
       return {
         engine: 'hyperframes',
         mainDurationS: comp.mainDurationS,
@@ -318,6 +428,15 @@ export async function handleRender(job: Job): Promise<void> {
           key: `videos/${video.id}/composition.html`,
           content: comp.html,
           contentType: 'text/html; charset=utf-8',
+          assetKind: 'composition_html',
+          meta: {
+            assets: manifest,
+            width: 1080,
+            height: 1920,
+            main_duration_s: comp.mainDurationS,
+            outro_duration_s: comp.outroDurationS,
+            total_duration_s: comp.totalDurationS,
+          },
         },
       };
     };
@@ -372,6 +491,7 @@ export async function handleRender(job: Job): Promise<void> {
         kind: result.artifact.assetKind,
         r2_key: result.artifact.key,
         size_bytes: Buffer.byteLength(result.artifact.content),
+        meta: result.artifact.meta,
       });
     }
 

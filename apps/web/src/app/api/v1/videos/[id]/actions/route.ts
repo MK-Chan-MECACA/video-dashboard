@@ -10,6 +10,7 @@ const PIPELINE_ACTIONS: VideoActionName[] = [
   'regenerate_scene',
   'regenerate_avatar',
   're_render',
+  'render_composition',
 ];
 
 const REVIEW_ACTIONS: Record<string, { kind: 'script' | 'video'; decision: 'approved' | 'changes_requested' }> = {

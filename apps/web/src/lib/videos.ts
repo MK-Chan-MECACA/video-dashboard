@@ -318,7 +318,8 @@ export type VideoActionName =
   | 'retry_failed'
   | 'regenerate_scene'
   | 'regenerate_avatar'
-  | 're_render';
+  | 're_render'
+  | 'render_composition';
 
 export async function performVideoAction(
   db: SupabaseClient,
@@ -372,6 +373,23 @@ export async function performVideoAction(
         .insert({ video_id: id, type: 'render', payload: { rerender: true } });
       if (error) throw new ApiError(500, error.message);
       await logEvent(db, id, 're_render_requested');
+      return;
+    }
+    case 'render_composition': {
+      // Render the stored (possibly edited) HyperFrames composition verbatim.
+      const { data: comp } = await db
+        .from('assets')
+        .select('id')
+        .eq('video_id', id)
+        .eq('kind', 'composition_html')
+        .limit(1)
+        .maybeSingle();
+      if (!comp) throw new ApiError(400, 'No editable composition — render the video first');
+      const { error } = await db
+        .from('jobs')
+        .insert({ video_id: id, type: 'render', payload: { use_composition: true } });
+      if (error) throw new ApiError(500, error.message);
+      await logEvent(db, id, 'composition_render_requested');
       return;
     }
     default:

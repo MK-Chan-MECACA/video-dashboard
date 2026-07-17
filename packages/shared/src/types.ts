@@ -37,7 +37,8 @@ export type AssetKind =
   | 'scene_clip'
   | 'subtitle_ass'
   | 'final_video'
-  | 'thumbnail';
+  | 'thumbnail'
+  | 'composition_html';
 
 export type BrandAssetKind = 'logo' | 'outro' | 'bgm' | 'avatar_reference';
 
