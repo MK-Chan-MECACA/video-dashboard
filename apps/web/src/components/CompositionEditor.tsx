@@ -89,7 +89,21 @@ export function CompositionEditor({
   const [error, setError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const highlightRef = useRef<HTMLPreElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [activeLine, setActiveLine] = useState<number | null>(null);
   const dirty = html !== savedHtml;
+
+  // Code lines tinted with their clip's track color (matches the timeline).
+  const highlightedLines = useMemo(
+    () =>
+      html.split('\n').map((line) => {
+        const m = line.match(/data-track-index="(\d+)"/);
+        const color = m ? (TRACK_COLORS[Number(m[1])] ?? FALLBACK_COLOR).text : undefined;
+        return { line, color };
+      }),
+    [html],
+  );
 
   // Relative "assets/..." srcs resolve through the manifest-backed API route.
   const withBase = (raw: string): string =>
@@ -182,6 +196,35 @@ export function CompositionEditor({
     if (el) el.currentTime = t;
   };
 
+  /** Scroll the code panel to a clip's line and select it. */
+  const jumpToClip = (c: TimelineClip) => {
+    const needle = `id="${c.label}"`;
+    const idx = html.indexOf(needle);
+    if (idx < 0) return;
+    const lineNo = html.slice(0, idx).split('\n').length - 1;
+    const lineStart = html.lastIndexOf('\n', idx) + 1;
+    const nl = html.indexOf('\n', idx);
+    const lineEnd = nl < 0 ? html.length : nl;
+    setActiveLine(lineNo);
+    const ta = textareaRef.current;
+    const span = highlightRef.current?.children[lineNo] as HTMLElement | undefined;
+    if (ta) {
+      ta.focus();
+      ta.setSelectionRange(lineStart, lineEnd);
+      // span offsets account for soft-wrapped lines; a plain line*height doesn't
+      if (span) ta.scrollTop = Math.max(0, span.offsetTop - ta.clientHeight / 3);
+    }
+  };
+
+  const syncScroll = () => {
+    const ta = textareaRef.current;
+    const pre = highlightRef.current;
+    if (ta && pre) {
+      pre.scrollTop = ta.scrollTop;
+      pre.scrollLeft = ta.scrollLeft;
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -237,12 +280,39 @@ export function CompositionEditor({
       )}
 
       <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
-        <textarea
-          value={html}
-          onChange={(e) => setHtml(e.target.value)}
-          spellCheck={false}
-          className="h-[70vh] w-full resize-none rounded-[12px] border border-studio-border-strong bg-studio-code p-3 font-mono text-xs leading-5 text-studio-text"
-        />
+        {/* Overlay editor: colored <pre> behind a transparent-text textarea.
+            Both must share font, padding, and wrapping so they align. */}
+        {/* lg: height comes from grid stretch, matching the preview column */}
+        <div className="relative h-[70vh] w-full overflow-hidden rounded-[12px] border border-studio-border-strong bg-studio-code lg:h-auto">
+          <pre
+            ref={highlightRef}
+            aria-hidden
+            className="pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap break-words p-3 font-mono text-xs leading-5 text-studio-sub"
+          >
+            {highlightedLines.map((l, i) => (
+              <span
+                key={i}
+                style={{
+                  color: l.color,
+                  background: i === activeLine ? 'rgba(233,185,73,0.14)' : undefined,
+                }}
+              >
+                {l.line + '\n'}
+              </span>
+            ))}
+          </pre>
+          <textarea
+            ref={textareaRef}
+            value={html}
+            onChange={(e) => {
+              setHtml(e.target.value);
+              setActiveLine(null);
+            }}
+            onScroll={syncScroll}
+            spellCheck={false}
+            className="absolute inset-0 h-full w-full resize-none whitespace-pre-wrap break-words bg-transparent p-3 font-mono text-xs leading-5 text-transparent caret-white outline-none selection:bg-[rgba(233,185,73,0.3)]"
+          />
+        </div>
         <div className="space-y-3">
           <div className="mx-auto aspect-[9/16] w-full max-w-[360px] overflow-hidden rounded-[12px] border border-studio-border bg-black">
             {playerLoaded ? (
@@ -279,7 +349,10 @@ export function CompositionEditor({
                 {clips.map((c, i) => (
                   <button
                     key={i}
-                    onClick={() => seek(c.start)}
+                    onClick={() => {
+                      seek(c.start);
+                      jumpToClip(c);
+                    }}
                     title={`${c.label} · ${c.start.toFixed(1)}s – ${(c.start + c.duration).toFixed(1)}s`}
                     style={{
                       left: `${(c.start / timeline.total) * 100}%`,
