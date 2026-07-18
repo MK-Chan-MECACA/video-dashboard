@@ -140,6 +140,14 @@ export function CompositionEditor({
   }, [playerLoaded, appliedHtml]);
 
   const timeline = useMemo(() => parseTimeline(appliedHtml), [appliedHtml]);
+  const rulerTicks = useMemo(() => {
+    const total = timeline.total;
+    if (!total) return [];
+    const step = [1, 2, 5, 10, 15, 30, 60].find((s) => total / s <= 10) ?? 60;
+    const ticks: number[] = [];
+    for (let s = 0; s < total; s += step) ticks.push(s);
+    return ticks;
+  }, [timeline.total]);
   const tracks = useMemo(() => {
     const byTrack = new Map<number, TimelineClip[]>();
     for (const c of timeline.clips) {
@@ -338,6 +346,36 @@ export function CompositionEditor({
 
       {timeline.total > 0 && (
         <div className="space-y-1 rounded-[12px] border border-studio-border bg-studio-card p-3">
+          {/* Time ruler: second marks + click-to-seek + playhead */}
+          <div className="flex items-center gap-2">
+            <span className="w-20 shrink-0 text-right text-[10px] text-studio-faint">time</span>
+            <div
+              className="relative h-5 flex-1 cursor-pointer border-b border-studio-border"
+              onClick={(e) => {
+                const r = e.currentTarget.getBoundingClientRect();
+                seek(((e.clientX - r.left) / r.width) * timeline.total);
+              }}
+            >
+              {rulerTicks.map((s) => (
+                <span
+                  key={s}
+                  className="absolute bottom-0 h-2 border-l border-studio-border-hover pl-1 text-[9px] leading-3 text-studio-muted"
+                  style={{ left: `${(s / timeline.total) * 100}%` }}
+                >
+                  {s}s
+                </span>
+              ))}
+              <div
+                className="pointer-events-none absolute top-0 h-5 w-px bg-studio-accent"
+                style={{
+                  left: `${(Math.min(currentTime, timeline.total) / timeline.total) * 100}%`,
+                }}
+              />
+              <span className="absolute right-0 top-0 text-[9px] text-studio-accent">
+                {currentTime.toFixed(1)}s / {timeline.total.toFixed(1)}s
+              </span>
+            </div>
+          </div>
           {tracks.map(([trackIndex, clips]) => {
             const color = TRACK_COLORS[trackIndex] ?? FALLBACK_COLOR;
             return (
