@@ -40,6 +40,19 @@ const TRACK_LABELS: Record<number, string> = {
   11: 'bgm',
 };
 
+/** Per-track clip colors so the timeline reads at a glance. */
+const TRACK_COLORS: Record<number, { bg: string; border: string; text: string }> = {
+  0: { bg: 'rgba(59,130,246,0.25)', border: 'rgba(59,130,246,0.6)', text: '#93c5fd' }, // avatar - blue
+  1: { bg: 'rgba(168,85,247,0.25)', border: 'rgba(168,85,247,0.6)', text: '#d8b4fe' }, // b-roll - purple
+  2: { bg: 'rgba(20,184,166,0.25)', border: 'rgba(20,184,166,0.6)', text: '#5eead4' }, // bubble - teal
+  3: { bg: 'rgba(249,115,22,0.25)', border: 'rgba(249,115,22,0.6)', text: '#fdba74' }, // logo - orange
+  4: { bg: 'rgba(233,185,73,0.22)', border: 'rgba(233,185,73,0.55)', text: '#e9b949' }, // captions - gold
+  5: { bg: 'rgba(244,63,94,0.25)', border: 'rgba(244,63,94,0.6)', text: '#fda4af' }, // outro - rose
+  10: { bg: 'rgba(34,197,94,0.25)', border: 'rgba(34,197,94,0.6)', text: '#86efac' }, // voiceover - green
+  11: { bg: 'rgba(34,197,94,0.14)', border: 'rgba(34,197,94,0.4)', text: '#4ade80' }, // bgm - dim green
+};
+const FALLBACK_COLOR = { bg: 'rgba(163,154,140,0.2)', border: 'rgba(163,154,140,0.5)', text: '#a39a8c' };
+
 function parseTimeline(html: string): { total: number; clips: TimelineClip[] } {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   const root = doc.querySelector('[data-composition-id]');
@@ -255,9 +268,11 @@ export function CompositionEditor({
 
       {timeline.total > 0 && (
         <div className="space-y-1 rounded-[12px] border border-studio-border bg-studio-card p-3">
-          {tracks.map(([trackIndex, clips]) => (
+          {tracks.map(([trackIndex, clips]) => {
+            const color = TRACK_COLORS[trackIndex] ?? FALLBACK_COLOR;
+            return (
             <div key={trackIndex} className="flex items-center gap-2">
-              <span className="w-20 shrink-0 text-right text-[10px] text-studio-faint">
+              <span className="w-20 shrink-0 text-right text-[10px]" style={{ color: color.text }}>
                 {TRACK_LABELS[trackIndex] ?? `track ${trackIndex}`}
               </span>
               <div className="relative h-6 flex-1 rounded-[4px] bg-studio-panel">
@@ -269,8 +284,11 @@ export function CompositionEditor({
                     style={{
                       left: `${(c.start / timeline.total) * 100}%`,
                       width: `${Math.max((c.duration / timeline.total) * 100, 0.5)}%`,
+                      background: color.bg,
+                      borderColor: color.border,
+                      color: color.text,
                     }}
-                    className="absolute top-0.5 h-5 overflow-hidden rounded-[3px] border border-studio-border-hover bg-studio-inset px-1 text-left text-[9px] leading-5 text-studio-sub hover:bg-studio-border"
+                    className="absolute top-0.5 h-5 overflow-hidden rounded-[3px] border px-1 text-left text-[9px] leading-5 brightness-100 hover:brightness-150"
                   >
                     {c.label}
                   </button>
@@ -283,7 +301,8 @@ export function CompositionEditor({
                 />
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
