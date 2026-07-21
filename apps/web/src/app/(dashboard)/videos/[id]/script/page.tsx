@@ -35,9 +35,18 @@ export default async function ScriptPage({ params }: { params: Promise<{ id: str
     .eq('key', 'target_duration_s')
     .maybeSingle();
 
+  const { data: voiceover } = await supabase
+    .from('assets')
+    .select('id')
+    .eq('video_id', id)
+    .eq('kind', 'voiceover')
+    .limit(1)
+    .maybeSingle();
+
   return (
     <ScriptEditor
       video={video as Video}
+      hasVoiceover={!!voiceover}
       targetDurationS={resolveTargetDurationS(targetSetting?.value)}
       versions={(versions ?? []) as ScriptVersion[]}
       comments={(comments ?? []).map((c) => ({

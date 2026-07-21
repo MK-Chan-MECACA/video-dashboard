@@ -70,11 +70,14 @@ export function ScriptEditor({
   targetDurationS,
   versions,
   comments,
+  hasVoiceover = false,
 }: {
   video: Video;
   targetDurationS: number;
   versions: ScriptVersion[];
   comments: CommentRow[];
+  /** Video already has a generated voiceover — enables one-click save + regenerate. */
+  hasVoiceover?: boolean;
 }) {
   const router = useRouter();
   const current = versions.find((v) => v.id === video.current_script_version_id) ?? versions[0];
@@ -160,6 +163,30 @@ export function ScriptEditor({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'send_for_review' }),
+    });
+    setBusy(null);
+    if (!res.ok) return setError(await res.text());
+    router.push(`/videos/${video.id}`);
+    router.refresh();
+  }
+
+  /** Save the edit, then re-run voice → avatar → render in one click. */
+  async function saveAndRegenerate() {
+    setBusy('regen-video');
+    setError(null);
+    const saved = await fetch(`/api/videos/${video.id}/script`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(script),
+    });
+    if (!saved.ok) {
+      setBusy(null);
+      return setError(await saved.text());
+    }
+    const res = await fetch(`/api/videos/${video.id}/actions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'regenerate_voice' }),
     });
     setBusy(null);
     if (!res.ok) return setError(await res.text());
@@ -268,14 +295,40 @@ export function ScriptEditor({
           >
             Regenerate from scratch
           </button>
-          <button
-            onClick={sendForReview}
-            disabled={!!busy || !script.hook}
-            className="studio-lift ml-auto rounded-[9px] bg-studio-accent px-4 py-2 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
-          >
-            {busy === 'review' ? 'Sending…' : 'Save + Send for review'}
-          </button>
+          {hasVoiceover ? (
+            <>
+              <button
+                onClick={sendForReview}
+                disabled={!!busy || !script.hook}
+                className="ml-auto rounded-[9px] border border-studio-border-strong px-4 py-2 text-sm text-studio-sub hover:bg-studio-inset disabled:opacity-50"
+              >
+                {busy === 'review' ? 'Sending…' : 'Save + Send for review'}
+              </button>
+              <button
+                onClick={saveAndRegenerate}
+                disabled={!!busy || !script.hook}
+                title="Saves the script, then re-runs voiceover, avatar and the final render. Existing B-roll scenes are kept."
+                className="studio-lift rounded-[9px] bg-studio-accent px-4 py-2 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
+              >
+                {busy === 'regen-video' ? 'Starting…' : 'Save + regenerate video'}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={sendForReview}
+              disabled={!!busy || !script.hook}
+              className="studio-lift ml-auto rounded-[9px] bg-studio-accent px-4 py-2 text-sm font-semibold text-studio-on-accent disabled:opacity-50"
+            >
+              {busy === 'review' ? 'Sending…' : 'Save + Send for review'}
+            </button>
+          )}
         </div>
+        {hasVoiceover && (
+          <p className="text-[11px] text-studio-muted">
+            &ldquo;Save + regenerate video&rdquo; re-voices the edited script, regenerates the
+            avatar and re-renders — B-roll scenes are kept. The new video comes back for review.
+          </p>
+        )}
         {error && <p className="text-sm text-red-400">{error}</p>}
       </div>
 

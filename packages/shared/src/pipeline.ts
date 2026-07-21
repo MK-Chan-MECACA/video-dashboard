@@ -8,8 +8,10 @@ import type { VideoStatus } from './types';
 export const TRANSITIONS: Record<VideoStatus, VideoStatus[]> = {
   draft: ['script_generating', 'script_review'],
   script_generating: ['script_review', 'failed'],
-  script_review: ['script_approved', 'script_changes_requested'],
-  script_changes_requested: ['script_generating', 'script_review'],
+  // voice_generating from the script states covers the one-click "save +
+  // regenerate video" on a video that already has a voiceover.
+  script_review: ['script_approved', 'script_changes_requested', 'voice_generating'],
+  script_changes_requested: ['script_generating', 'script_review', 'voice_generating'],
   script_approved: ['voice_generating'],
   voice_generating: ['avatar_generating', 'failed'],
   avatar_generating: ['scenes_generating', 'rendering', 'failed'],

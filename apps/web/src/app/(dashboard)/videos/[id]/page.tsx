@@ -253,6 +253,7 @@ export default async function VideoDetailPage({
           {isOperator && (
             <VideoActions
               video={v}
+              hasVoiceover={!!voiceover}
               links={(links ?? []).map((l) => ({
                 id: l.id,
                 kind: l.kind,

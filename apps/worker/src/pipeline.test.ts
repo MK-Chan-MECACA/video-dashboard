@@ -14,6 +14,10 @@ for (const from of ['video_review', 'video_changes_requested', 'approved'] as co
   }
 }
 
+// One-click "save + regenerate video" from the script states.
+assert(canTransition('script_review', 'voice_generating'));
+assert(canTransition('script_changes_requested', 'voice_generating'));
+
 // The regen cascade rides the normal pipeline back to review.
 assert(canTransition('voice_generating', 'avatar_generating'));
 assert(canTransition('avatar_generating', 'rendering'));

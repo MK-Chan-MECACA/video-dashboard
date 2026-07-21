@@ -12,7 +12,16 @@ interface LinkRow {
   created_at: string;
 }
 
-export function VideoActions({ video, links }: { video: Video; links: LinkRow[] }) {
+export function VideoActions({
+  video,
+  links,
+  hasVoiceover = false,
+}: {
+  video: Video;
+  links: LinkRow[];
+  /** Video has a generated voiceover — regeneration buttons make sense. */
+  hasVoiceover?: boolean;
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -112,9 +121,16 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
             Retry failed jobs
           </button>
         )}
-        {(video.status === 'video_changes_requested' ||
-          video.status === 'video_review' ||
-          video.status === 'approved') && (
+        {hasVoiceover &&
+          ![
+            'script_generating',
+            'voice_generating',
+            'avatar_generating',
+            'scenes_generating',
+            'rendering',
+            'scheduled',
+            'posted',
+          ].includes(video.status) && (
           <>
             <button
               onClick={() => act('regenerate_voice')}

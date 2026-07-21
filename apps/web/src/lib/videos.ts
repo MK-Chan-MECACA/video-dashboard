@@ -375,6 +375,16 @@ export async function performVideoAction(
       // moves the video back through rendering. Existing B-roll scenes are
       // kept — regenerate them individually if the script changed their beats.
       if (!video.current_script_version_id) throw new ApiError(400, 'No script version to voice');
+      const { data: voiceover } = await db
+        .from('assets')
+        .select('id')
+        .eq('video_id', id)
+        .eq('kind', 'voiceover')
+        .limit(1)
+        .maybeSingle();
+      if (!voiceover) {
+        throw new ApiError(400, 'No voiceover yet — approve the script to generate the video first');
+      }
       if (!canTransition(video.status as VideoStatus, 'voice_generating')) {
         throw new ApiError(
           409,
@@ -384,9 +394,18 @@ export async function performVideoAction(
               : ''),
         );
       }
+      // Keep paid B-roll clips when they exist; a video without them yet gets
+      // the full generation so the pipeline never stalls waiting on scenes.
+      const { data: sceneClip } = await db
+        .from('assets')
+        .select('id')
+        .eq('video_id', id)
+        .eq('kind', 'scene_clip')
+        .limit(1)
+        .maybeSingle();
       const { error } = await db
         .from('jobs')
-        .insert({ video_id: id, type: 'tts', payload: { regenerate: true } });
+        .insert({ video_id: id, type: 'tts', payload: sceneClip ? { regenerate: true } : {} });
       if (error) throw new ApiError(500, error.message);
       await db.from('videos').update({ status: 'voice_generating' }).eq('id', id);
       await logEvent(db, id, 'voice_regenerate_requested');
