@@ -30,6 +30,7 @@ export function VideoActions({
   const [scheduleAt, setScheduleAt] = useState(
     video.schedule_at ? video.schedule_at.slice(0, 16) : '',
   );
+  const [metaSaved, setMetaSaved] = useState(false);
 
   async function act(action: string, extra: Record<string, unknown> = {}) {
     setBusy(action);
@@ -210,18 +211,26 @@ export function VideoActions({
             className="rounded-[9px] border border-studio-border-strong bg-studio-inset px-3 py-2 font-mono text-[13px] text-[#d8cfbf]"
           />
           <button
-            onClick={() =>
-              act('update_meta', {
+            onClick={async () => {
+              setMetaSaved(false);
+              const ok = await act('update_meta', {
                 caption: caption || null,
                 schedule_at: scheduleAt ? new Date(scheduleAt).toISOString() : null,
-              })
-            }
+              });
+              if (ok) setMetaSaved(true);
+            }}
             disabled={!!busy}
             className="rounded-[9px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] transition-colors hover:bg-[#201d18] hover:text-studio-bright disabled:opacity-50"
           >
             Save caption & schedule
           </button>
+          {metaSaved && <span className="text-xs text-emerald-300">Saved ✓</span>}
         </div>
+        <p className="mt-2 text-[11px] leading-normal text-studio-muted">
+          {video.ghl_post_id
+            ? `Scheduled in GoHighLevel (post ${video.ghl_post_id}).`
+            : 'Saving only stores the caption and time — the post is created in GoHighLevel automatically once the video is approved through its review link.'}
+        </p>
       </div>
 
       {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
