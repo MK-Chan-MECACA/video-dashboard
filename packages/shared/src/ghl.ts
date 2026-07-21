@@ -65,7 +65,24 @@ export class GhlClient {
         status: 'scheduled',
         summary: opts.caption,
         scheduleDate: opts.scheduleDate,
-        media: [{ url: opts.mediaUrl }],
+        // GHL's schema marks media.type and tiktokPostDetails optional, but its
+        // backend dereferences both and 400s with "Cannot read properties of
+        // undefined (reading 'toLowerCase')" when they're missing.
+        media: [
+          {
+            url: opts.mediaUrl,
+            type: opts.mediaUrl.toLowerCase().endsWith('.mp4') ? 'video/mp4' : 'image/png',
+          },
+        ],
+        tiktokPostDetails: {
+          privacyLevel: 'PUBLIC_TO_EVERYONE',
+          enableComment: true,
+          enableDuet: false,
+          enableStitch: false,
+          promoteOtherBrand: false,
+          promoteYourBrand: false,
+          videoDisclosure: false,
+        },
         // followUpComment intentionally omitted — not allowed for TikTok
       }),
     });
