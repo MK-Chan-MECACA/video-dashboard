@@ -9,6 +9,41 @@ interface ReviewScript {
   version: number;
 }
 
+// Must live at module level: defining this inside ReviewClient gives it a new
+// identity every render, remounting the input and dropping focus per keystroke.
+function CommentBox({
+  show,
+  value,
+  onChange,
+  onSend,
+  sending,
+}: {
+  show: boolean;
+  value: string;
+  onChange: (v: string) => void;
+  onSend: () => void;
+  sending: boolean;
+}) {
+  if (!show) return null;
+  return (
+    <div className="mt-2 flex gap-2">
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Add a comment…"
+        className="flex-1 rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1 text-xs"
+      />
+      <button
+        onClick={onSend}
+        disabled={sending || !value.trim()}
+        className="rounded-[8px] border border-studio-border-strong px-3 py-1 text-xs text-studio-sub hover:bg-studio-inset disabled:opacity-40"
+      >
+        Send
+      </button>
+    </div>
+  );
+}
+
 /** Unique scene code everyone can reference, e.g. "V4-S2". */
 function code(videoNo: number | null | undefined, index: number): string {
   return videoNo ? `V${videoNo}-S${index}` : `Scene ${index}`;
@@ -112,24 +147,13 @@ export function ReviewClient({
     setDone(decision);
   }
 
-  const CommentBox = ({ sectionKey }: { sectionKey: string }) =>
-    awaiting && !done ? (
-      <div className="mt-2 flex gap-2">
-        <input
-          value={comment[sectionKey] ?? ''}
-          onChange={(e) => setComment((c) => ({ ...c, [sectionKey]: e.target.value }))}
-          placeholder="Add a comment…"
-          className="flex-1 rounded-[8px] border border-studio-border-strong bg-studio-inset px-2 py-1 text-xs"
-        />
-        <button
-          onClick={() => sendComment(sectionKey)}
-          disabled={busy === `c-${sectionKey}` || !comment[sectionKey]?.trim()}
-          className="rounded-[8px] border border-studio-border-strong px-3 py-1 text-xs text-studio-sub hover:bg-studio-inset disabled:opacity-40"
-        >
-          Send
-        </button>
-      </div>
-    ) : null;
+  const commentBoxProps = (sectionKey: string) => ({
+    show: awaiting && !done,
+    value: comment[sectionKey] ?? '',
+    onChange: (v: string) => setComment((c) => ({ ...c, [sectionKey]: v })),
+    onSend: () => sendComment(sectionKey),
+    sending: busy === `c-${sectionKey}`,
+  });
 
   return (
     <div className="mx-auto max-w-xl space-y-5 pb-32">
@@ -166,7 +190,7 @@ export function ReviewClient({
               {section.sub && (
                 <p className="mt-1 text-xs text-studio-muted">B-roll: {section.sub}</p>
               )}
-              <CommentBox sectionKey={section.key} />
+              <CommentBox {...commentBoxProps(section.key)} />
             </div>
           ))}
         </div>
@@ -176,7 +200,7 @@ export function ReviewClient({
         (mediaUrl ? (
           <div className="rounded-[14px] border border-studio-border bg-studio-card p-4">
             <video controls playsInline src={mediaUrl} className="mx-auto max-h-[70vh] rounded" />
-            <CommentBox sectionKey="video" />
+            <CommentBox {...commentBoxProps('video')} />
           </div>
         ) : (
           <p className="text-sm text-studio-sub">The final video is not ready yet.</p>

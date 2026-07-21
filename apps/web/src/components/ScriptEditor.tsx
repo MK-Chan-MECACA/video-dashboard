@@ -21,6 +21,39 @@ interface CommentRow {
   body: string;
 }
 
+// Must live at module level: defining this inside ScriptEditor gives it a new
+// identity every render, remounting the textarea and dropping focus per keystroke.
+function Section({
+  label,
+  value,
+  onChange,
+  comments,
+  rows = 2,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  comments: CommentRow[];
+  rows?: number;
+}) {
+  return (
+    <div>
+      <label className="mb-1 block text-sm font-semibold text-studio-accent">{label}</label>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={rows}
+        className="w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
+      />
+      {comments.map((c) => (
+        <p key={c.id} className="mt-1 rounded-[6px] bg-orange-950 px-2 py-1 text-xs text-orange-200">
+          💬 <b>{c.author_name}:</b> {c.body}
+        </p>
+      ))}
+    </div>
+  );
+}
+
 const EMPTY: Script = {
   hook: '',
   cta: '',
@@ -136,35 +169,6 @@ export function ScriptEditor({
 
   const commentsFor = (key: string) => comments.filter((c) => c.section_key === key);
 
-  const Section = ({
-    label,
-    sectionKey,
-    value,
-    onChange,
-    rows = 2,
-  }: {
-    label: string;
-    sectionKey: string;
-    value: string;
-    onChange: (v: string) => void;
-    rows?: number;
-  }) => (
-    <div>
-      <label className="mb-1 block text-sm font-semibold text-studio-accent">{label}</label>
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        rows={rows}
-        className="w-full rounded-[8px] border border-studio-border-strong bg-studio-inset px-3 py-2 text-sm"
-      />
-      {commentsFor(sectionKey).map((c) => (
-        <p key={c.id} className="mt-1 rounded-[6px] bg-orange-950 px-2 py-1 text-xs text-orange-200">
-          💬 <b>{c.author_name}:</b> {c.body}
-        </p>
-      ))}
-    </div>
-  );
-
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <div className="flex items-center gap-3">
@@ -186,7 +190,7 @@ export function ScriptEditor({
       <div className="space-y-4 rounded-[12px] border border-studio-border bg-studio-card p-5">
         <Section
           label="Hook"
-          sectionKey="hook"
+          comments={commentsFor('hook')}
           value={script.hook}
           onChange={(v) => setScript((s) => ({ ...s, hook: v }))}
         />
@@ -194,7 +198,7 @@ export function ScriptEditor({
           <div key={scene.index} className="space-y-2 rounded-[8px] border border-studio-border p-3">
             <Section
               label={`${sceneCode(video.video_no, scene.index)} — voiceover`}
-              sectionKey={`scene_${scene.index}`}
+              comments={commentsFor(`scene_${scene.index}`)}
               value={scene.voiceover}
               onChange={(v) => setScene(scene.index, { voiceover: v })}
             />
@@ -225,7 +229,7 @@ export function ScriptEditor({
         ))}
         <Section
           label="CTA"
-          sectionKey="cta"
+          comments={commentsFor('cta')}
           value={script.cta}
           onChange={(v) => setScript((s) => ({ ...s, cta: v }))}
         />
