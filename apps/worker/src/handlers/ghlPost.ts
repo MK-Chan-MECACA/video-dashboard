@@ -3,6 +3,7 @@ import { ghl, r2 } from '../clients';
 import {
   completeJob,
   db,
+  enqueueJob,
   getLatestAsset,
   getVideo,
   insertPost,
@@ -31,7 +32,15 @@ export function nextDay19KualaLumpur(now = new Date()): string {
 export async function handleGhlPost(job: Job): Promise<void> {
   const video = await getVideo(job.video_id);
   const caption = video.caption;
-  if (!caption) throw new Error(`Video ${video.id} has no caption to post with`);
+  if (!caption) {
+    // Caption was wiped between generation and posting (e.g. a stale operator
+    // save) — regenerate instead of failing; the caption handler re-enqueues
+    // ghl_post once the caption exists.
+    await enqueueJob(video.id, 'generate_caption', {});
+    await logEvent(video.id, 'caption_missing_regenerating', { job_id: job.id });
+    await completeJob(job.id);
+    return;
+  }
 
   const finalAsset = await getLatestAsset(video.id, 'final_video');
   if (!finalAsset) throw new Error(`Video ${video.id} has no final_video asset`);

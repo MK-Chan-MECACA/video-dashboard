@@ -220,8 +220,10 @@ export function VideoActions({
           <button
             onClick={async () => {
               setMetaSaved(false);
+              // Empty box means "no override" — never null out a caption the
+              // worker generated after approval (stale page would wipe it).
               const ok = await act('update_meta', {
-                caption: caption || null,
+                ...(caption.trim() ? { caption } : {}),
                 schedule_at: scheduleAt ? new Date(scheduleAt).toISOString() : null,
               });
               if (ok) setMetaSaved(true);
