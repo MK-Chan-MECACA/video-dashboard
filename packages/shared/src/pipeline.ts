@@ -15,9 +15,20 @@ export const TRANSITIONS: Record<VideoStatus, VideoStatus[]> = {
   avatar_generating: ['scenes_generating', 'rendering', 'failed'],
   scenes_generating: ['rendering', 'failed'],
   rendering: ['video_review', 'failed'],
-  video_review: ['approved', 'video_changes_requested'],
-  video_changes_requested: ['avatar_generating', 'scenes_generating', 'rendering'],
-  approved: ['scheduled', 'failed'],
+  // Operator regeneration (voice/avatar/scene/re-render) is allowed from
+  // video_review and approved, so a finished video can loop back through
+  // generation after a script edit. scheduled/posted stay closed — the GHL
+  // post already references the rendered file.
+  video_review: [
+    'approved',
+    'video_changes_requested',
+    'voice_generating',
+    'avatar_generating',
+    'scenes_generating',
+    'rendering',
+  ],
+  video_changes_requested: ['voice_generating', 'avatar_generating', 'scenes_generating', 'rendering'],
+  approved: ['scheduled', 'failed', 'voice_generating', 'avatar_generating', 'scenes_generating', 'rendering'],
   scheduled: ['posted', 'failed'],
   posted: [],
   failed: [

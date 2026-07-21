@@ -112,8 +112,18 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
             Retry failed jobs
           </button>
         )}
-        {(video.status === 'video_changes_requested' || video.status === 'video_review') && (
+        {(video.status === 'video_changes_requested' ||
+          video.status === 'video_review' ||
+          video.status === 'approved') && (
           <>
+            <button
+              onClick={() => act('regenerate_voice')}
+              disabled={!!busy}
+              className="rounded-[8px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] transition-colors hover:bg-[#201d18] hover:text-studio-bright disabled:opacity-50"
+              title="Re-runs TTS from the current script, then regenerates the avatar and re-renders. Keeps existing B-roll scenes."
+            >
+              Regenerate voice + avatar
+            </button>
             <button
               onClick={() => act('regenerate_avatar')}
               disabled={!!busy}
@@ -144,7 +154,9 @@ export function VideoActions({ video, links }: { video: Video; links: LinkRow[] 
 
       <p className="mt-3 text-[11px] leading-normal text-studio-muted">
         Approval happens through a review link — creating one copies it to your clipboard.
-        Regen scenes/avatar and Re-render are available while the video is in review.
+        Regeneration is available in review and after approval (until the post is scheduled).
+        After editing the script, use &ldquo;Regenerate voice + avatar&rdquo; to re-voice it —
+        existing B-roll scenes are kept.
       </p>
 
       {newLink && (

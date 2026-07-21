@@ -7,6 +7,7 @@ type Params = { params: Promise<{ id: string }> };
 const PIPELINE_ACTIONS: VideoActionName[] = [
   'send_for_review',
   'retry_failed',
+  'regenerate_voice',
   'regenerate_scene',
   'regenerate_avatar',
   're_render',
@@ -22,7 +23,7 @@ const REVIEW_ACTIONS: Record<string, { kind: 'script' | 'video'; decision: 'appr
 
 /**
  * POST /api/v1/videos/:id/actions
- * Pipeline: { action: send_for_review | retry_failed | regenerate_scene | regenerate_avatar | re_render, scene_index? }
+ * Pipeline: { action: send_for_review | retry_failed | regenerate_voice | regenerate_scene | regenerate_avatar | re_render, scene_index? }
  * Review:   { action: approve_script | request_script_changes | approve_video | request_video_changes, comment?, reviewer_name? }
  */
 export function POST(req: Request, { params }: Params) {

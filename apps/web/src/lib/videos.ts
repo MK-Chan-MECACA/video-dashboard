@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   BOARD_COLUMNS,
+  canTransition,
   formatReviewerFeedback,
   generateScript,
   type Asset,
@@ -316,6 +317,7 @@ export async function deleteVideo(
 export type VideoActionName =
   | 'send_for_review'
   | 'retry_failed'
+  | 'regenerate_voice'
   | 'regenerate_scene'
   | 'regenerate_avatar'
   | 're_render'
@@ -328,6 +330,25 @@ export async function performVideoAction(
 ): Promise<void> {
   const { data: video } = await db.from('videos').select('*').eq('id', id).single();
   if (!video) throw new ApiError(404, 'Video not found');
+
+  // Regenerating an approved video: approval queued generate_caption → ghl_post,
+  // which would schedule the OLD render while the new one is generating. Cancel
+  // the queued jobs — approving the new render queues them again.
+  const regenActions: VideoActionName[] = [
+    'regenerate_voice',
+    'regenerate_scene',
+    'regenerate_avatar',
+    're_render',
+    'render_composition',
+  ];
+  if (video.status === 'approved' && regenActions.includes(opts.action)) {
+    await db
+      .from('jobs')
+      .delete()
+      .eq('video_id', id)
+      .in('type', ['generate_caption', 'ghl_post'])
+      .eq('status', 'queued');
+  }
 
   switch (opts.action) {
     case 'send_for_review': {
@@ -346,6 +367,29 @@ export async function performVideoAction(
       if (error) throw new ApiError(500, error.message);
       await db.from('videos').update({ status_error: null }).eq('id', id);
       await logEvent(db, id, 'retry_failed_jobs');
+      return;
+    }
+    case 'regenerate_voice': {
+      // Re-run TTS from the current script version, then cascade: the tts
+      // handler enqueues the avatar (with the new voiceover) and the finalizer
+      // moves the video back through rendering. Existing B-roll scenes are
+      // kept — regenerate them individually if the script changed their beats.
+      if (!video.current_script_version_id) throw new ApiError(400, 'No script version to voice');
+      if (!canTransition(video.status as VideoStatus, 'voice_generating')) {
+        throw new ApiError(
+          409,
+          `Cannot regenerate voice while status is ${video.status}` +
+            (video.status === 'scheduled' || video.status === 'posted'
+              ? ' — the post already references this render'
+              : ''),
+        );
+      }
+      const { error } = await db
+        .from('jobs')
+        .insert({ video_id: id, type: 'tts', payload: { regenerate: true } });
+      if (error) throw new ApiError(500, error.message);
+      await db.from('videos').update({ status: 'voice_generating' }).eq('id', id);
+      await logEvent(db, id, 'voice_regenerate_requested');
       return;
     }
     case 'regenerate_scene': {

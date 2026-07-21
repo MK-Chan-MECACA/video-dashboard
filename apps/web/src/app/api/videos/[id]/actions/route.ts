@@ -8,7 +8,7 @@ type Params = { params: Promise<{ id: string }> };
 /**
  * Operator actions on a video:
  *  send_for_review | update_meta {caption?, schedule_at?, title?, topic_brief?}
- *  retry_failed | regenerate_scene {scene_index} | regenerate_avatar | re_render
+ *  retry_failed | regenerate_voice | regenerate_scene {scene_index} | regenerate_avatar | re_render
  */
 export async function POST(req: Request, { params }: Params) {
   let supabase;

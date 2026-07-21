@@ -73,23 +73,28 @@ export async function handleTts(job: Job): Promise<void> {
 
   await setVideoStatus(video.id, 'avatar_generating', { job_id: job.id });
 
-  // The three B-roll scenes must tile the whole voiceover (scene 1 covers the
-  // hook, scene 3 the CTA) so the full-screen avatar never shows. Ask the
-  // video model for at least the coverage window, rounded up.
-  const totalS = Math.max(
-    speech.duration || 0,
-    speech.wordTimestamps[speech.wordTimestamps.length - 1].end,
-  );
-  const windows = computeSceneCoverageWindows(script, speech.wordTimestamps, totalS);
   await enqueueJob(video.id, 'avatar', {});
-  for (const scene of sv.scenes) {
-    const win = windows.find((w) => w.section === `scene_${scene.index}`);
-    await enqueueJob(video.id, 'scene', {
-      scene_index: scene.index,
-      model_path: scene.model_path || DEFAULT_SCENE_MODEL,
-      prompt: scene.broll_prompt,
-      duration_hint: win ? Math.ceil(win.end - win.start) : 8,
-    });
+  // Voice regeneration keeps the existing B-roll clips (each scene is a paid
+  // WaveSpeed generation) — the operator regenerates scenes individually when
+  // the script change moved their beats. First-time TTS enqueues all three.
+  if (!job.payload.regenerate) {
+    // The three B-roll scenes must tile the whole voiceover (scene 1 covers the
+    // hook, scene 3 the CTA) so the full-screen avatar never shows. Ask the
+    // video model for at least the coverage window, rounded up.
+    const totalS = Math.max(
+      speech.duration || 0,
+      speech.wordTimestamps[speech.wordTimestamps.length - 1].end,
+    );
+    const windows = computeSceneCoverageWindows(script, speech.wordTimestamps, totalS);
+    for (const scene of sv.scenes) {
+      const win = windows.find((w) => w.section === `scene_${scene.index}`);
+      await enqueueJob(video.id, 'scene', {
+        scene_index: scene.index,
+        model_path: scene.model_path || DEFAULT_SCENE_MODEL,
+        prompt: scene.broll_prompt,
+        duration_hint: win ? Math.ceil(win.end - win.start) : 8,
+      });
+    }
   }
 
   await completeJob(job.id);
