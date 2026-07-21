@@ -622,10 +622,20 @@ export async function applyReviewDecision(
     // Approved script → start generation. The worker resolves the voice from
     // settings at run time, so a retry after a voice change uses the new voice.
     await db.from('videos').update({ status: 'voice_generating' }).eq('id', videoId);
+    // Re-approval of an edited script on an already-generated video keeps the
+    // paid B-roll clips (same semantics as regenerate_voice) — only voice,
+    // avatar and render re-run. First approval generates everything.
+    const { data: existingScene } = await db
+      .from('assets')
+      .select('id')
+      .eq('video_id', videoId)
+      .eq('kind', 'scene_clip')
+      .limit(1)
+      .maybeSingle();
     await db.from('jobs').insert({
       video_id: videoId,
       type: 'tts',
-      payload: {},
+      payload: existingScene ? { regenerate: true } : {},
     });
     await db.from('pipeline_events').insert({
       video_id: videoId,
