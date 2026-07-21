@@ -4,6 +4,13 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { Video } from '@vd/shared/types';
 
+/** UTC ISO → value for <input type="datetime-local"> in the viewer's timezone. */
+function toLocalInputValue(iso: string): string {
+  const d = new Date(iso);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+}
+
 interface LinkRow {
   id: string;
   kind: 'script' | 'video';
@@ -28,7 +35,7 @@ export function VideoActions({
   const [newLink, setNewLink] = useState<string | null>(null);
   const [caption, setCaption] = useState(video.caption ?? '');
   const [scheduleAt, setScheduleAt] = useState(
-    video.schedule_at ? video.schedule_at.slice(0, 16) : '',
+    video.schedule_at ? toLocalInputValue(video.schedule_at) : '',
   );
   const [metaSaved, setMetaSaved] = useState(false);
 
