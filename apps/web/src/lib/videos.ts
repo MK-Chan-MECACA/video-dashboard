@@ -15,7 +15,7 @@ import {
 import { estimateVideoCost } from '@vd/shared/pricing';
 import { ApiError } from '@/lib/apiAuth';
 import { getScriptGenContext, logEvent, saveScriptVersion } from '@/lib/scripts';
-import { appUrl, r2 } from '@/lib/services';
+import { appUrl, ghl, r2 } from '@/lib/services';
 import { newReviewToken } from '@/lib/tokens';
 
 /**
@@ -288,6 +288,67 @@ export async function updateVideo(
       );
     }
     throw new ApiError(500, error.message);
+  }
+
+  // Post already scheduled in GHL → push caption/time edits through to it.
+  // GHL's PUT needs the full post body, so rebuild it from the stored post
+  // row + final video asset. Clearing schedule_at doesn't unschedule.
+  if (patch.caption !== undefined || patch.schedule_at) {
+    const { data: video } = await db
+      .from('videos')
+      .select('status, ghl_post_id, caption, schedule_at')
+      .eq('id', id)
+      .single();
+    if (video?.ghl_post_id && video.status === 'scheduled') {
+      const [{ data: post }, { data: finalAsset }] = await Promise.all([
+        db.from('posts').select('ghl_account_id').eq('ghl_post_id', video.ghl_post_id).single(),
+        db
+          .from('assets')
+          .select('r2_key')
+          .eq('video_id', id)
+          .eq('kind', 'final_video')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      const accountIds = (post?.ghl_account_id ?? process.env.GHL_SOCIAL_ACCOUNT_IDS ?? '')
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+      const userId = process.env.GHL_USER_ID;
+      const caption = video.caption;
+      const scheduleAt = video.schedule_at;
+      if (!accountIds.length || !userId || !caption || !scheduleAt || !finalAsset) {
+        throw new ApiError(
+          502,
+          'Saved here, but the GoHighLevel post was not updated — missing ' +
+            (!userId ? 'GHL_USER_ID env var' : 'post context (account/caption/schedule/video)'),
+        );
+      }
+      try {
+        await ghl().updatePost(video.ghl_post_id, {
+          accountIds,
+          userId,
+          caption,
+          mediaUrl: r2().publicUrl(finalAsset.r2_key),
+          scheduleDate: new Date(scheduleAt).toISOString(),
+        });
+      } catch (e) {
+        throw new ApiError(
+          502,
+          `Saved here, but updating the GoHighLevel post failed: ${String(e)}`,
+        );
+      }
+      await logEvent(db, id, 'post_rescheduled', {
+        ghl_post_id: video.ghl_post_id,
+        schedule_date: scheduleAt,
+        ...(patch.caption !== undefined ? { caption_updated: true } : {}),
+      });
+      await db
+        .from('posts')
+        .update({ schedule_date: scheduleAt, caption })
+        .eq('ghl_post_id', video.ghl_post_id);
+    }
   }
 }
 

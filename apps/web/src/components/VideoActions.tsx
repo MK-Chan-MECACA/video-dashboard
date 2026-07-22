@@ -233,7 +233,11 @@ export function VideoActions({
           >
             Save caption & schedule
           </button>
-          {metaSaved && <span className="text-xs text-emerald-300">Saved ✓</span>}
+          {metaSaved && (
+            <span className="text-xs text-emerald-300">
+              {video.ghl_post_id ? 'Saved ✓ — GoHighLevel post updated' : 'Saved ✓'}
+            </span>
+          )}
         </div>
         <p className="mt-2 text-[11px] leading-normal text-studio-muted">
           {video.ghl_post_id

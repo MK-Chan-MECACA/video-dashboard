@@ -40,6 +40,49 @@ export class GhlClient {
   }
 
   /**
+   * Full post body — both create (POST) and edit (PUT) need the complete
+   * payload: GHL's PUT 422s without accountIds/userId/media, and its backend
+   * dereferences media.type and tiktokPostDetails ("undefined.toLowerCase"
+   * 400) despite the schema marking them optional.
+   */
+  private postBody(opts: {
+    accountIds: string[];
+    userId: string;
+    caption: string;
+    mediaUrl: string;
+    scheduleDate: string;
+  }) {
+    if (opts.caption.length > 2200) {
+      // 2200 is TikTok's limit, the strictest of the supported platforms.
+      throw new Error(`Caption too long: ${opts.caption.length} > 2200`);
+    }
+    return {
+      accountIds: opts.accountIds,
+      userId: opts.userId,
+      type: 'post',
+      status: 'scheduled',
+      summary: opts.caption,
+      scheduleDate: opts.scheduleDate,
+      media: [
+        {
+          url: opts.mediaUrl,
+          type: opts.mediaUrl.toLowerCase().endsWith('.mp4') ? 'video/mp4' : 'image/png',
+        },
+      ],
+      tiktokPostDetails: {
+        privacyLevel: 'PUBLIC_TO_EVERYONE',
+        enableComment: true,
+        enableDuet: false,
+        enableStitch: false,
+        promoteOtherBrand: false,
+        promoteYourBrand: false,
+        videoDisclosure: false,
+      },
+      // followUpComment intentionally omitted — not allowed for TikTok
+    };
+  }
+
+  /**
    * Schedule a post to one or more connected social accounts (TikTok,
    * Instagram, Facebook, YouTube, ...). mediaUrl must be publicly fetchable
    * (R2 public URL).
@@ -51,40 +94,10 @@ export class GhlClient {
     mediaUrl: string;
     scheduleDate: string; // ISO
   }): Promise<string> {
-    if (opts.caption.length > 2200) {
-      // 2200 is TikTok's limit, the strictest of the supported platforms.
-      throw new Error(`Caption too long: ${opts.caption.length} > 2200`);
-    }
     const res = await fetch(`${BASE}/social-media-posting/${this.locationId}/posts`, {
       method: 'POST',
       headers: this.headers(),
-      body: JSON.stringify({
-        accountIds: opts.accountIds,
-        userId: opts.userId,
-        type: 'post',
-        status: 'scheduled',
-        summary: opts.caption,
-        scheduleDate: opts.scheduleDate,
-        // GHL's schema marks media.type and tiktokPostDetails optional, but its
-        // backend dereferences both and 400s with "Cannot read properties of
-        // undefined (reading 'toLowerCase')" when they're missing.
-        media: [
-          {
-            url: opts.mediaUrl,
-            type: opts.mediaUrl.toLowerCase().endsWith('.mp4') ? 'video/mp4' : 'image/png',
-          },
-        ],
-        tiktokPostDetails: {
-          privacyLevel: 'PUBLIC_TO_EVERYONE',
-          enableComment: true,
-          enableDuet: false,
-          enableStitch: false,
-          promoteOtherBrand: false,
-          promoteYourBrand: false,
-          videoDisclosure: false,
-        },
-        // followUpComment intentionally omitted — not allowed for TikTok
-      }),
+      body: JSON.stringify(this.postBody(opts)),
     });
     if (!res.ok) throw new Error(`GHL schedulePost ${res.status}: ${await res.text()}`);
     const json = (await res.json()) as {
@@ -100,6 +113,31 @@ export class GhlClient {
       json.id;
     if (!id) throw new Error(`GHL schedulePost: no post id: ${JSON.stringify(json).slice(0, 300)}`);
     return String(id);
+  }
+
+  /**
+   * Update the caption and/or schedule time of an existing scheduled post.
+   * GHL's PUT requires the full post body, so callers must pass everything.
+   */
+  async updatePost(
+    postId: string,
+    opts: {
+      accountIds: string[];
+      userId: string;
+      caption: string;
+      mediaUrl: string;
+      scheduleDate: string; // ISO
+    },
+  ): Promise<void> {
+    const res = await fetch(
+      `${BASE}/social-media-posting/${this.locationId}/posts/${postId}`,
+      {
+        method: 'PUT',
+        headers: this.headers(),
+        body: JSON.stringify({ ...this.postBody(opts), scheduleTimeUpdated: true }),
+      },
+    );
+    if (!res.ok) throw new Error(`GHL updatePost ${res.status}: ${await res.text()}`);
   }
 
   async getPost(postId: string): Promise<GhlPost> {
