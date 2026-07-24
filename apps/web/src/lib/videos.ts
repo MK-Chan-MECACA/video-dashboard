@@ -261,7 +261,7 @@ export async function updateVideo(
     caption?: string;
     schedule_at?: string | null;
   },
-): Promise<{ ghl: 'updated' | 'already_posted' | 'none' }> {
+): Promise<{ ghl: 'updated' | 'recreating' | 'already_posted' | 'none' }> {
   const update: Record<string, unknown> = {};
   if (patch.status !== undefined) {
     if (!VALID_STATUSES.has(patch.status)) throw new ApiError(400, `Invalid status: ${patch.status}`);
@@ -308,11 +308,30 @@ export async function updateVideo(
           'Saved here, but the GoHighLevel post was not updated — it needs both a caption and a schedule time',
         );
       }
+      // The referenced GHL post may be dead — deleted in the planner or a
+      // failed publish. Editing it would be invisible; recreate instead.
+      let post = null;
+      try {
+        post = await ghl().getPost(video.ghl_post_id);
+      } catch {
+        post = null;
+      }
+      if (!post || post.deleted || /fail|error|deleted/.test(post.status.toLowerCase())) {
+        await ghl()
+          .deletePost(video.ghl_post_id)
+          .catch(() => {});
+        await db.from('videos').update({ ghl_post_id: null }).eq('id', id);
+        await db.from('jobs').insert({ video_id: id, type: 'ghl_post', payload: {} });
+        await logEvent(db, id, 'post_recreate_queued', {
+          old_ghl_post_id: video.ghl_post_id,
+          old_status: post?.status ?? 'not_found',
+        });
+        return { ghl: 'recreating' };
+      }
       try {
         // The existing GHL post is the source of truth for accounts, author
         // and media (already re-hosted on GHL's CDN) — echo them back, since
         // GHL's PUT requires the full post body.
-        const post = await ghl().getPost(video.ghl_post_id);
         const accountIds = post.accountIds ?? [];
         const userId = post.createdBy ?? process.env.GHL_USER_ID;
         const mediaUrl = post.media?.[0]?.url;

@@ -15,6 +15,7 @@ export interface GhlPost {
   accountIds?: string[];
   createdBy?: string;
   media?: { url: string; type?: string }[];
+  deleted?: boolean;
 }
 
 export class GhlClient {
@@ -188,6 +189,16 @@ export class GhlClient {
       media: Array.isArray(p.media)
         ? (p.media as { url: string; type?: string }[])
         : undefined,
+      deleted: p.deleted === true,
     };
+  }
+
+  /** Delete a post (scheduled or failed). Publishing that already happened is unaffected. */
+  async deletePost(postId: string): Promise<void> {
+    const res = await fetch(
+      `${BASE}/social-media-posting/${this.locationId}/posts/${postId}`,
+      { method: 'DELETE', headers: this.headers() },
+    );
+    if (!res.ok) throw new Error(`GHL deletePost ${res.status}: ${await res.text()}`);
   }
 }

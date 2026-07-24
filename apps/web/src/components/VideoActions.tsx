@@ -230,9 +230,11 @@ export function VideoActions({
                 setMetaSaved(
                   res.ghl === 'updated'
                     ? 'Saved ✓ — GoHighLevel post updated'
-                    : res.ghl === 'already_posted'
-                      ? 'Saved ✓ — but this post is already published; it cannot be rescheduled'
-                      : 'Saved ✓',
+                    : res.ghl === 'recreating'
+                      ? 'Saved ✓ — old GoHighLevel post was gone; creating a fresh scheduled post now'
+                      : res.ghl === 'already_posted'
+                        ? 'Saved ✓ — but this post is already published; it cannot be rescheduled'
+                        : 'Saved ✓',
                 );
               }
             }}
