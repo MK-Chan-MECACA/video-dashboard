@@ -44,7 +44,15 @@ export async function handleGhlPost(job: Job): Promise<void> {
 
   const finalAsset = await getLatestAsset(video.id, 'final_video');
   if (!finalAsset) throw new Error(`Video ${video.id} has no final_video asset`);
-  const mediaUrl = r2().publicUrl(finalAsset.r2_key);
+  // TikTok rejects media pulled from domains not verified with GHL's TikTok
+  // app (our r2.dev public URL), so re-host the video on GHL's CDN first.
+  const bytes = await r2().getBytes(finalAsset.r2_key);
+  const mediaUrl = await ghl().uploadMedia(
+    `v${video.video_no ?? video.id}-final.mp4`,
+    bytes,
+    'video/mp4',
+  );
+  await logEvent(video.id, 'ghl_media_uploaded', { job_id: job.id, media_url: mediaUrl });
 
   const scheduleDate = video.schedule_at
     ? new Date(video.schedule_at).toISOString()

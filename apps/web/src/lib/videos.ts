@@ -300,37 +300,30 @@ export async function updateVideo(
       .eq('id', id)
       .single();
     if (video?.ghl_post_id && video.status === 'scheduled') {
-      const [{ data: post }, { data: finalAsset }] = await Promise.all([
-        db.from('posts').select('ghl_account_id').eq('ghl_post_id', video.ghl_post_id).single(),
-        db
-          .from('assets')
-          .select('r2_key')
-          .eq('video_id', id)
-          .eq('kind', 'final_video')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-      ]);
-      const accountIds = (post?.ghl_account_id ?? process.env.GHL_SOCIAL_ACCOUNT_IDS ?? '')
-        .split(',')
-        .map((s: string) => s.trim())
-        .filter(Boolean);
-      const userId = process.env.GHL_USER_ID;
       const caption = video.caption;
       const scheduleAt = video.schedule_at;
-      if (!accountIds.length || !userId || !caption || !scheduleAt || !finalAsset) {
+      if (!caption || !scheduleAt) {
         throw new ApiError(
           502,
-          'Saved here, but the GoHighLevel post was not updated — missing ' +
-            (!userId ? 'GHL_USER_ID env var' : 'post context (account/caption/schedule/video)'),
+          'Saved here, but the GoHighLevel post was not updated — it needs both a caption and a schedule time',
         );
       }
       try {
+        // The existing GHL post is the source of truth for accounts, author
+        // and media (already re-hosted on GHL's CDN) — echo them back, since
+        // GHL's PUT requires the full post body.
+        const post = await ghl().getPost(video.ghl_post_id);
+        const accountIds = post.accountIds ?? [];
+        const userId = post.createdBy ?? process.env.GHL_USER_ID;
+        const mediaUrl = post.media?.[0]?.url;
+        if (!accountIds.length || !userId || !mediaUrl) {
+          throw new Error('GHL post is missing accounts, author or media');
+        }
         await ghl().updatePost(video.ghl_post_id, {
           accountIds,
           userId,
           caption,
-          mediaUrl: r2().publicUrl(finalAsset.r2_key),
+          mediaUrl,
           scheduleDate: new Date(scheduleAt).toISOString(),
         });
       } catch (e) {

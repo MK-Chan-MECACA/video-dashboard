@@ -12,6 +12,9 @@ export interface GhlPost {
   id: string;
   status: string;
   scheduleDate?: string;
+  accountIds?: string[];
+  createdBy?: string;
+  media?: { url: string; type?: string }[];
 }
 
 export class GhlClient {
@@ -27,6 +30,34 @@ export class GhlClient {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     };
+  }
+
+  /**
+   * Upload a file into the GHL media library and return its CDN URL.
+   * TikTok only accepts post media pulled from domains verified with GHL's
+   * TikTok app, so external URLs (e.g. r2.dev) must be re-hosted here first.
+   */
+  async uploadMedia(name: string, data: Uint8Array, contentType: string): Promise<string> {
+    const form = new FormData();
+    // Copy to a plain ArrayBuffer: Node Buffers are offset views typed as
+    // Uint8Array<ArrayBufferLike>, which DOM lib's BlobPart rejects.
+    const bytes = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer;
+    form.append('file', new Blob([bytes], { type: contentType }), name);
+    form.append('name', name);
+    const res = await fetch(`${BASE}/medias/upload-file`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        Version: VERSION,
+        Accept: 'application/json',
+        // no Content-Type — fetch sets the multipart boundary
+      },
+      body: form,
+    });
+    if (!res.ok) throw new Error(`GHL uploadMedia ${res.status}: ${await res.text()}`);
+    const json = (await res.json()) as { url?: string };
+    if (!json.url) throw new Error(`GHL uploadMedia: no url in response`);
+    return json.url;
   }
 
   async listAccounts(): Promise<GhlSocialAccount[]> {
@@ -152,6 +183,11 @@ export class GhlClient {
       id: String(p._id ?? p.id ?? postId),
       status: String(p.status ?? 'unknown'),
       scheduleDate: p.scheduleDate ? String(p.scheduleDate) : undefined,
+      accountIds: Array.isArray(p.accountIds) ? p.accountIds.map(String) : undefined,
+      createdBy: p.createdBy ? String(p.createdBy) : undefined,
+      media: Array.isArray(p.media)
+        ? (p.media as { url: string; type?: string }[])
+        : undefined,
     };
   }
 }
