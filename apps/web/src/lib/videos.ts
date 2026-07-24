@@ -299,7 +299,7 @@ export async function updateVideo(
       .select('status, ghl_post_id, caption, schedule_at')
       .eq('id', id)
       .single();
-    if (video?.ghl_post_id && video.status === 'scheduled') {
+    if (video?.ghl_post_id && (video.status === 'scheduled' || video.status === 'failed')) {
       const caption = video.caption;
       const scheduleAt = video.schedule_at;
       if (!caption || !scheduleAt) {

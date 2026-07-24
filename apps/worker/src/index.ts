@@ -3,6 +3,7 @@ import { ghl, wavespeed } from './clients';
 import {
   claimJobs,
   closeDb,
+  db,
   failJobWithRetry,
   getScheduledPosts,
   getStaleExternalJobs,
@@ -98,6 +99,19 @@ async function checkScheduledPosts(): Promise<void> {
         await logEvent(post.video_id, 'post_published', { ghl_post_id: post.ghl_post_id });
       } else if (/fail|error|deleted/.test(status)) {
         await updatePostStatus(post.id, 'failed');
+        // Surface the failure on the pipeline board — the video would
+        // otherwise sit in "Scheduled" forever.
+        const flipped = await setVideoStatus(post.video_id, 'failed', {
+          ghl_post_id: post.ghl_post_id,
+          ghl_status: remote.status,
+        });
+        if (flipped) {
+          await db()`
+            update videos
+            set status_error = ${`GHL post ${remote.status} — save a new schedule time to recreate the post`}
+            where id = ${post.video_id}
+          `;
+        }
         await logEvent(post.video_id, 'post_failed', {
           ghl_post_id: post.ghl_post_id,
           ghl_status: remote.status,

@@ -41,6 +41,8 @@ export const TRANSITIONS: Record<VideoStatus, VideoStatus[]> = {
     'scenes_generating',
     'rendering',
     'approved',
+    // Recreating a GHL post after a failed publish re-schedules the video.
+    'scheduled',
   ],
 };
 

@@ -28,4 +28,9 @@ assert(!canTransition('scheduled', 'voice_generating'));
 assert(!canTransition('posted', 'voice_generating'));
 assert(!canTransition('posted', 'rendering'));
 
+// A failed GHL publish flips the video to failed; recreating the post
+// re-schedules it.
+assert(canTransition('scheduled', 'failed'));
+assert(canTransition('failed', 'scheduled'));
+
 console.log('pipeline.test.ts: all assertions passed');
