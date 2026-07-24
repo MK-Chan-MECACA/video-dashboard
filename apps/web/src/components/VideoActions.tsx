@@ -37,7 +37,7 @@ export function VideoActions({
   const [scheduleAt, setScheduleAt] = useState(
     video.schedule_at ? toLocalInputValue(video.schedule_at) : '',
   );
-  const [metaSaved, setMetaSaved] = useState(false);
+  const [metaSaved, setMetaSaved] = useState<string | null>(null);
 
   async function act(action: string, extra: Record<string, unknown> = {}) {
     setBusy(action);
@@ -50,10 +50,10 @@ export function VideoActions({
     setBusy(null);
     if (!res.ok) {
       setError(await res.text());
-      return false;
+      return null;
     }
     router.refresh();
-    return true;
+    return (await res.json().catch(() => ({}))) as { ghl?: string };
   }
 
   async function createLink(kind: 'script' | 'video') {
@@ -219,30 +219,36 @@ export function VideoActions({
           />
           <button
             onClick={async () => {
-              setMetaSaved(false);
+              setMetaSaved(null);
               // Empty box means "no override" — never null out a caption the
               // worker generated after approval (stale page would wipe it).
-              const ok = await act('update_meta', {
+              const res = await act('update_meta', {
                 ...(caption.trim() ? { caption } : {}),
                 schedule_at: scheduleAt ? new Date(scheduleAt).toISOString() : null,
               });
-              if (ok) setMetaSaved(true);
+              if (res) {
+                setMetaSaved(
+                  res.ghl === 'updated'
+                    ? 'Saved ✓ — GoHighLevel post updated'
+                    : res.ghl === 'already_posted'
+                      ? 'Saved ✓ — but this post is already published; it cannot be rescheduled'
+                      : 'Saved ✓',
+                );
+              }
             }}
             disabled={!!busy}
             className="rounded-[9px] border border-studio-border-strong px-3.5 py-2 text-[12.5px] text-[#c9c0b0] transition-colors hover:bg-[#201d18] hover:text-studio-bright disabled:opacity-50"
           >
             Save caption & schedule
           </button>
-          {metaSaved && (
-            <span className="text-xs text-emerald-300">
-              {video.ghl_post_id ? 'Saved ✓ — GoHighLevel post updated' : 'Saved ✓'}
-            </span>
-          )}
+          {metaSaved && <span className="text-xs text-emerald-300">{metaSaved}</span>}
         </div>
         <p className="mt-2 text-[11px] leading-normal text-studio-muted">
-          {video.ghl_post_id
-            ? `Scheduled in GoHighLevel (post ${video.ghl_post_id}).`
-            : 'Saving only stores the caption and time — the post is created in GoHighLevel automatically once the video is approved through its review link.'}
+          {video.status === 'posted'
+            ? 'This video is already published — changing the caption or time here no longer affects the live post.'
+            : video.ghl_post_id
+              ? `Scheduled in GoHighLevel (post ${video.ghl_post_id}) — saving a new time or caption updates the scheduled post.`
+              : 'Saving only stores the caption and time — the post is created in GoHighLevel automatically once the video is approved through its review link.'}
         </p>
       </div>
 

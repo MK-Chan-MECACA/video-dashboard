@@ -261,7 +261,7 @@ export async function updateVideo(
     caption?: string;
     schedule_at?: string | null;
   },
-): Promise<void> {
+): Promise<{ ghl: 'updated' | 'already_posted' | 'none' }> {
   const update: Record<string, unknown> = {};
   if (patch.status !== undefined) {
     if (!VALID_STATUSES.has(patch.status)) throw new ApiError(400, `Invalid status: ${patch.status}`);
@@ -341,8 +341,11 @@ export async function updateVideo(
         .from('posts')
         .update({ schedule_date: scheduleAt, caption })
         .eq('ghl_post_id', video.ghl_post_id);
+      return { ghl: 'updated' };
     }
+    if (video?.ghl_post_id && video.status === 'posted') return { ghl: 'already_posted' };
   }
+  return { ghl: 'none' };
 }
 
 export async function deleteVideo(

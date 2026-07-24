@@ -29,12 +29,13 @@ export async function POST(req: Request, { params }: Params) {
 
   try {
     if (body.action === 'update_meta') {
-      await updateVideo(supabase, id, {
+      const result = await updateVideo(supabase, id, {
         caption: body.caption,
         schedule_at: body.schedule_at,
         title: body.title,
         topic_brief: body.topic_brief,
       });
+      return NextResponse.json({ ok: true, ...result });
     } else {
       await performVideoAction(supabase, id, {
         action: body.action as VideoActionName,
